@@ -1,0 +1,32 @@
+{
+  "manifest_version": 3,
+  "name": "Autopsy",
+  "version": "1.0.0",
+  "description": "Surgical precision tab analysis - find what to close",
+  "permissions": [
+    "tabs",
+    "processes",
+    "storage",
+    "webRequest"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "src/background/worker.js",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "index.html",
+    "default_icon": {
+      "16": "icon16.png",
+      "48": "icon48.png",
+      "128": "icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  }
+}

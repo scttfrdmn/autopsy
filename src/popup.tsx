@@ -1,4 +1,3 @@
-import { h } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
 import type { TabMetrics, SortColumn, SortDirection, NetworkStats } from './types';
 import './popup.css';
@@ -26,9 +25,9 @@ export function App() {
       const storage = await chrome.storage.local.get(null);
       
       // Get memory info
-      let processes: { [key: string]: chrome.processes.Process } = {};
+      let processes: { [key: string]: any } = {};
       try {
-        processes = await chrome.processes.getProcessInfo([], true);
+        processes = await (chrome as any).processes.getProcessInfo([], true);
       } catch (e) {
         console.warn('Memory info unavailable:', e);
       }
@@ -62,7 +61,7 @@ export function App() {
           favIconUrl: tab.favIconUrl,
           windowId: tab.windowId,
           created,
-          lastAccessed: tab.lastAccessed || Date.now(),
+          lastAccessed: (tab as any).lastAccessed || Date.now(),
           networkActivity: network,
           memoryUsage,
           isActive: tab.active || false,

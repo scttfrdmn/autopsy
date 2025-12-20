@@ -59,7 +59,7 @@ chrome.webRequest.onCompleted.addListener(
 );
 
 // Expose network stats to popup
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
   if (request.action === 'getNetworkStats') {
     sendResponse({ stats: networkStats });
     return true;

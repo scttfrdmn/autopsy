@@ -41,12 +41,13 @@ export interface NetworkStats {
   };
 }
 
-export type SortColumn = 
-  | 'title' 
-  | 'created' 
-  | 'lastAccessed' 
-  | 'memory' 
-  | 'networkActivity' 
-  | 'requestCount';
+export type SortColumn =
+  | 'title'
+  | 'created'
+  | 'lastAccessed'
+  | 'memory'
+  | 'networkActivity'
+  | 'requestCount'
+  | 'bytesTransferred';
 
 export type SortDirection = 'asc' | 'desc';

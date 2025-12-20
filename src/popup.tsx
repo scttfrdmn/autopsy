@@ -7,6 +7,7 @@ export function App() {
   const [loading, setLoading] = useState(true);
   const [sortColumn, setSortColumn] = useState<SortColumn>('lastAccessed');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [ageFilter, setAgeFilter] = useState<number>(0); // 0 = no filter, value in milliseconds
 
   useEffect(() => {
     loadTabData();
@@ -87,7 +88,14 @@ export function App() {
     }
   };
 
-  const sortedTabs = [...tabs].sort((a, b) => {
+  const filteredTabs = ageFilter > 0
+    ? tabs.filter(tab => {
+        const age = tab.created ? Date.now() - tab.created : null;
+        return age !== null && age >= ageFilter;
+      })
+    : tabs;
+
+  const sortedTabs = [...filteredTabs].sort((a, b) => {
     let aVal: any, bVal: any;
     
     switch (sortColumn) {
@@ -115,6 +123,10 @@ export function App() {
         aVal = a.networkActivity.requestCount;
         bVal = b.networkActivity.requestCount;
         break;
+      case 'bytesTransferred':
+        aVal = a.networkActivity.bytesReceived;
+        bVal = b.networkActivity.bytesReceived;
+        break;
       default:
         return 0;
     }
@@ -136,11 +148,22 @@ export function App() {
     const minutes = Math.floor(diff / 60000);
     const hours = Math.floor(minutes / 60);
     const days = Math.floor(hours / 24);
-    
+
     if (days > 0) return `${days}d ago`;
     if (hours > 0) return `${hours}h ago`;
     if (minutes > 0) return `${minutes}m ago`;
     return 'Just now';
+  };
+
+  const formatTimestamp = (timestamp: number | null): string => {
+    if (!timestamp) return '—';
+    const date = new Date(timestamp);
+    return date.toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   const getActivityStatus = (tab: TabMetrics): 'active' | 'recent' | 'idle' | 'dead' => {
@@ -164,6 +187,15 @@ export function App() {
   const focusTab = async (tabId: number, windowId: number) => {
     await chrome.windows.update(windowId, { focused: true });
     await chrome.tabs.update(tabId, { active: true });
+  };
+
+  const closeFilteredTabs = async () => {
+    if (ageFilter === 0 || filteredTabs.length === 0) return;
+
+    const tabIds = filteredTabs.map(t => t.id);
+    await chrome.tabs.remove(tabIds);
+    setTabs(tabs.filter(t => !tabIds.includes(t.id)));
+    setAgeFilter(0); // Reset filter after closing
   };
 
   if (loading) {
@@ -211,14 +243,20 @@ export function App() {
               <th class="col-title" onClick={() => handleSort('title')}>
                 Tab {sortColumn === 'title' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
-              <th class="col-time" onClick={() => handleSort('lastAccessed')}>
-                Last Active {sortColumn === 'lastAccessed' && (sortDirection === 'asc' ? '↑' : '↓')}
+              <th class="col-timestamp" onClick={() => handleSort('created')}>
+                Opened {sortColumn === 'created' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
               <th class="col-time" onClick={() => handleSort('created')}>
                 Age {sortColumn === 'created' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
+              <th class="col-timestamp" onClick={() => handleSort('networkActivity')}>
+                Last Activity {sortColumn === 'networkActivity' && (sortDirection === 'asc' ? '↑' : '↓')}
+              </th>
               <th class="col-number" onClick={() => handleSort('requestCount')}>
                 Requests {sortColumn === 'requestCount' && (sortDirection === 'asc' ? '↑' : '↓')}
+              </th>
+              <th class="col-number" onClick={() => handleSort('bytesTransferred')}>
+                Data {sortColumn === 'bytesTransferred' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
               <th class="col-memory" onClick={() => handleSort('memory')}>
                 Memory {sortColumn === 'memory' && (sortDirection === 'asc' ? '↑' : '↓')}
@@ -249,10 +287,14 @@ export function App() {
                       </div>
                     </div>
                   </td>
-                  <td class="col-time">{formatTime(tab.lastAccessed)}</td>
+                  <td class="col-timestamp">{formatTimestamp(tab.created)}</td>
                   <td class="col-time">{formatTime(age)}</td>
+                  <td class="col-timestamp">{formatTimestamp(tab.networkActivity.lastActivity)}</td>
                   <td class="col-number">
                     {tab.networkActivity.requestCount || '—'}
+                  </td>
+                  <td class="col-number">
+                    {formatBytes(tab.networkActivity.bytesReceived)}
                   </td>
                   <td class="col-memory">{formatBytes(tab.memoryUsage)}</td>
                   <td class="col-actions">
@@ -275,6 +317,27 @@ export function App() {
       </div>
 
       <footer class="footer">
+        <div class="filter-controls">
+          <label class="filter-label">Show tabs older than:</label>
+          <select
+            class="filter-select"
+            value={ageFilter}
+            onChange={(e) => setAgeFilter(Number((e.target as HTMLSelectElement).value))}
+          >
+            <option value="0">All tabs</option>
+            <option value={3600000}>1 hour</option>
+            <option value={21600000}>6 hours</option>
+            <option value={86400000}>1 day</option>
+            <option value={259200000}>3 days</option>
+            <option value={604800000}>1 week</option>
+            <option value={2592000000}>1 month</option>
+          </select>
+          {ageFilter > 0 && filteredTabs.length > 0 && (
+            <button class="btn-close-filtered" onClick={closeFilteredTabs}>
+              Close {filteredTabs.length} tab{filteredTabs.length !== 1 ? 's' : ''}
+            </button>
+          )}
+        </div>
         <button class="btn-refresh" onClick={loadTabData}>
           ↻ Refresh
         </button>

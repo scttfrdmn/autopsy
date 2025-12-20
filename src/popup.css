@@ -56,7 +56,7 @@ body {
 }
 
 .app {
-  width: 900px;
+  width: 800px;
   height: 600px;
   display: flex;
   flex-direction: column;
@@ -214,6 +214,10 @@ th:hover {
   width: 100px;
 }
 
+.col-timestamp {
+  width: 120px;
+}
+
 .col-number {
   width: 90px;
   text-align: right;
@@ -259,8 +263,8 @@ td {
 
 /* Status indicator */
 .status-indicator {
-  width: 8px;
-  height: 8px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
   margin: 0 auto;
   position: relative;
@@ -329,6 +333,12 @@ td {
   font-size: 12px;
 }
 
+.col-timestamp {
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+
 /* Number columns */
 .col-number {
   font-family: var(--font-mono);
@@ -380,8 +390,67 @@ td {
   border-top: 1px solid var(--border-strong);
   padding: var(--spacing-md) var(--spacing-lg);
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-lg);
   flex-shrink: 0;
+}
+
+.filter-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.filter-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.filter-select {
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  color: var(--text-primary);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: var(--font-ui);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.filter-select:hover {
+  border-color: var(--text-muted);
+}
+
+.filter-select:focus {
+  outline: none;
+  border-color: var(--status-active);
+}
+
+.btn-close-filtered {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  background: var(--status-dead);
+  border: none;
+  color: white;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--font-ui);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn-close-filtered:hover {
+  background: #ff5252;
+  transform: scale(1.02);
+}
+
+.btn-close-filtered:active {
+  transform: scale(0.98);
 }
 
 .btn-refresh {

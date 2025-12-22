@@ -275,6 +275,13 @@ td {
   vertical-align: middle;
 }
 
+.empty-state {
+  text-align: center;
+  padding: var(--spacing-xl) !important;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
 /* Status indicator */
 .status-indicator {
   width: 12px;
@@ -370,6 +377,25 @@ td {
   text-align: right;
 }
 
+
+/* Legend */
+.legend {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--spacing-xl);
+  padding: var(--spacing-md);
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border-subtle);
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
 
 /* Footer */
 .footer {
@@ -537,4 +563,16 @@ td {
 
 .btn-refresh:active {
   transform: scale(0.98);
+}
+
+.refresh-section {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.last-updated {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
 }

@@ -11,9 +11,25 @@ export function App() {
   const [customAgeDays, setCustomAgeDays] = useState<string>('');
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [selectedTabs, setSelectedTabs] = useState<Set<number>>(new Set());
+  const [lastUpdated, setLastUpdated] = useState<number>(Date.now());
 
   useEffect(() => {
     loadTabData();
+
+    // Auto-refresh every 10 seconds
+    const refreshInterval = setInterval(() => {
+      loadTabData();
+    }, 10000);
+
+    // Force re-render every second to update "X ago" displays
+    const updateInterval = setInterval(() => {
+      setLastUpdated(prev => prev);
+    }, 1000);
+
+    return () => {
+      clearInterval(refreshInterval);
+      clearInterval(updateInterval);
+    };
   }, []);
 
   const loadTabData = async () => {
@@ -59,6 +75,7 @@ export function App() {
       
       setTabs(metrics);
       setLoading(false);
+      setLastUpdated(Date.now());
     } catch (error) {
       console.error('Error loading tab data:', error);
       setLoading(false);
@@ -168,6 +185,11 @@ export function App() {
   const closeFilteredTabs = async () => {
     if (ageFilter === 0 || filteredTabs.length === 0) return;
 
+    if (filteredTabs.length > 5) {
+      const confirmed = confirm(`Close ${filteredTabs.length} filtered tabs?`);
+      if (!confirmed) return;
+    }
+
     const tabIds = filteredTabs.map(t => t.id);
     await chrome.tabs.remove(tabIds);
     setTabs(tabs.filter(t => !tabIds.includes(t.id)));
@@ -191,8 +213,21 @@ export function App() {
     setSelectedTabs(new Set(deadTabIds));
   };
 
+  const toggleSelectAll = () => {
+    if (selectedTabs.size === sortedTabs.length) {
+      setSelectedTabs(new Set());
+    } else {
+      setSelectedTabs(new Set(sortedTabs.map(t => t.id)));
+    }
+  };
+
   const closeSelectedTabs = async () => {
     if (selectedTabs.size === 0) return;
+
+    if (selectedTabs.size > 5) {
+      const confirmed = confirm(`Close ${selectedTabs.size} tabs?`);
+      if (!confirmed) return;
+    }
 
     const tabIds = Array.from(selectedTabs);
     await chrome.tabs.remove(tabIds);
@@ -236,7 +271,15 @@ export function App() {
         <table class="tab-table">
           <thead>
             <tr>
-              <th class="col-checkbox"></th>
+              <th class="col-checkbox">
+                <input
+                  type="checkbox"
+                  checked={sortedTabs.length > 0 && selectedTabs.size === sortedTabs.length}
+                  onChange={toggleSelectAll}
+                  class="tab-checkbox"
+                  title="Select all"
+                />
+              </th>
               <th class="col-status" title="🟢 Active (10s) | 🔵 Recent (5m) | 🟡 Idle (1h) | 🔴 Dead (>1h)">?</th>
               <th class="col-title" onClick={() => handleSort('title')}>
                 Tab {sortColumn === 'title' && (sortDirection === 'asc' ? '↑' : '↓')}
@@ -259,15 +302,25 @@ export function App() {
             </tr>
           </thead>
           <tbody>
-            {sortedTabs.map(tab => {
-              const status = getActivityStatus(tab);
-              const age = tab.created ? Date.now() - tab.created : null;
-              
-              return (
+            {sortedTabs.length === 0 ? (
+              <tr>
+                <td colSpan={8} class="empty-state">
+                  {ageFilter > 0 ? 'No tabs match this age filter' : 'No tabs open'}
+                </td>
+              </tr>
+            ) : (
+              sortedTabs.map(tab => {
+                const status = getActivityStatus(tab);
+                const age = tab.created ? Date.now() - tab.created : null;
+
+                return (
                 <tr
                   key={tab.id}
                   class={`tab-row ${status} ${tab.isActive ? 'is-active' : ''} ${selectedTabs.has(tab.id) ? 'selected' : ''}`}
-                  onClick={() => toggleTabSelection(tab.id)}
+                  onClick={async () => {
+                    await chrome.windows.update(tab.windowId, { focused: true });
+                    await chrome.tabs.update(tab.id, { active: true });
+                  }}
                 >
                   <td class="col-checkbox" onClick={(e) => e.stopPropagation()}>
                     <input
@@ -299,10 +352,30 @@ export function App() {
                     {formatBytes(tab.networkActivity.bytesReceived)}
                   </td>
                 </tr>
-              );
-            })}
+                );
+              })
+            )}
           </tbody>
         </table>
+      </div>
+
+      <div class="legend">
+        <div class="legend-item">
+          <div class="status-indicator active"></div>
+          <span>Active (&lt;10s)</span>
+        </div>
+        <div class="legend-item">
+          <div class="status-indicator recent"></div>
+          <span>Recent (&lt;5m)</span>
+        </div>
+        <div class="legend-item">
+          <div class="status-indicator idle"></div>
+          <span>Idle (&lt;1h)</span>
+        </div>
+        <div class="legend-item">
+          <div class="status-indicator dead"></div>
+          <span>Dead (&gt;1h)</span>
+        </div>
       </div>
 
       <footer class="footer">
@@ -368,9 +441,14 @@ export function App() {
               </button>
             )}
           </div>
-          <button class="btn-refresh" onClick={loadTabData}>
-            ↻ Refresh
-          </button>
+          <div class="refresh-section">
+            <button class="btn-refresh" onClick={loadTabData}>
+              ↻ Refresh
+            </button>
+            <span class="last-updated">
+              Updated {formatTime(Date.now() - lastUpdated)}
+            </span>
+          </div>
         </div>
       </footer>
     </div>

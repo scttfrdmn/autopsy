@@ -424,6 +424,32 @@ td {
   border-color: var(--status-active);
 }
 
+.custom-age-input {
+  width: 80px;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  color: var(--text-primary);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: var(--font-mono);
+  transition: all 0.15s ease;
+}
+
+.custom-age-input:hover {
+  border-color: var(--text-muted);
+}
+
+.custom-age-input:focus {
+  outline: none;
+  border-color: var(--status-active);
+}
+
+.custom-age-input::placeholder {
+  color: var(--text-muted);
+}
+
 .btn-close-filtered {
   padding: var(--spacing-sm) var(--spacing-lg);
   background: var(--status-dead);

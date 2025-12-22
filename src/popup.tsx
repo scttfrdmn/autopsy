@@ -8,6 +8,8 @@ export function App() {
   const [sortColumn, setSortColumn] = useState<SortColumn>('lastAccessed');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [ageFilter, setAgeFilter] = useState<number>(0); // 0 = no filter, value in milliseconds
+  const [customAgeDays, setCustomAgeDays] = useState<string>('');
+  const [showCustomInput, setShowCustomInput] = useState(false);
   const [selectedTabs, setSelectedTabs] = useState<Set<number>>(new Set());
 
   useEffect(() => {
@@ -345,15 +347,47 @@ export function App() {
             <label class="filter-label">Show tabs older than:</label>
             <select
               class="filter-select"
-              value={ageFilter}
-              onInput={(e) => setAgeFilter(Number((e.target as HTMLSelectElement).value))}
+              value={showCustomInput ? 'custom' : ageFilter}
+              onInput={(e) => {
+                const val = (e.target as HTMLSelectElement).value;
+                if (val === 'custom') {
+                  setShowCustomInput(true);
+                  setAgeFilter(0);
+                } else {
+                  setShowCustomInput(false);
+                  setAgeFilter(Number(val));
+                }
+              }}
             >
               <option value="0">All tabs</option>
               <option value={172800000}>2 days</option>
               <option value={604800000}>1 week</option>
               <option value={1209600000}>2 weeks</option>
               <option value={2592000000}>1 month</option>
+              <option value="custom">Custom...</option>
             </select>
+            {showCustomInput && (
+              <>
+                <input
+                  type="number"
+                  class="custom-age-input"
+                  placeholder="Days"
+                  value={customAgeDays}
+                  onInput={(e) => {
+                    const val = (e.target as HTMLInputElement).value;
+                    setCustomAgeDays(val);
+                    const days = parseInt(val, 10);
+                    if (!isNaN(days) && days > 0) {
+                      setAgeFilter(days * 86400000);
+                    } else {
+                      setAgeFilter(0);
+                    }
+                  }}
+                  min="1"
+                />
+                <span class="filter-label">days</span>
+              </>
+            )}
             {ageFilter > 0 && filteredTabs.length > 0 && (
               <button class="btn-close-filtered" onClick={closeFilteredTabs}>
                 Close {filteredTabs.length} Filtered

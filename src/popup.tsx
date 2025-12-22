@@ -8,6 +8,7 @@ export function App() {
   const [sortColumn, setSortColumn] = useState<SortColumn>('lastAccessed');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [ageFilter, setAgeFilter] = useState<number>(0); // 0 = no filter, value in milliseconds
+  const [selectedTabs, setSelectedTabs] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     loadTabData();
@@ -179,16 +180,6 @@ export function App() {
     return 'dead';
   };
 
-  const closeTab = async (tabId: number) => {
-    await chrome.tabs.remove(tabId);
-    setTabs(tabs.filter(t => t.id !== tabId));
-  };
-
-  const focusTab = async (tabId: number, windowId: number) => {
-    await chrome.windows.update(windowId, { focused: true });
-    await chrome.tabs.update(tabId, { active: true });
-  };
-
   const closeFilteredTabs = async () => {
     if (ageFilter === 0 || filteredTabs.length === 0) return;
 
@@ -196,6 +187,32 @@ export function App() {
     await chrome.tabs.remove(tabIds);
     setTabs(tabs.filter(t => !tabIds.includes(t.id)));
     setAgeFilter(0); // Reset filter after closing
+  };
+
+  const toggleTabSelection = (tabId: number) => {
+    const newSelected = new Set(selectedTabs);
+    if (newSelected.has(tabId)) {
+      newSelected.delete(tabId);
+    } else {
+      newSelected.add(tabId);
+    }
+    setSelectedTabs(newSelected);
+  };
+
+  const selectAllDeadTabs = () => {
+    const deadTabIds = sortedTabs
+      .filter(t => getActivityStatus(t) === 'dead')
+      .map(t => t.id);
+    setSelectedTabs(new Set(deadTabIds));
+  };
+
+  const closeSelectedTabs = async () => {
+    if (selectedTabs.size === 0) return;
+
+    const tabIds = Array.from(selectedTabs);
+    await chrome.tabs.remove(tabIds);
+    setTabs(tabs.filter(t => !tabIds.includes(t.id)));
+    setSelectedTabs(new Set());
   };
 
   if (loading) {
@@ -239,7 +256,8 @@ export function App() {
         <table class="tab-table">
           <thead>
             <tr>
-              <th class="col-status"></th>
+              <th class="col-checkbox"></th>
+              <th class="col-status" title="🟢 Active (10s) | 🔵 Recent (5m) | 🟡 Idle (1h) | 🔴 Dead (>1h)"></th>
               <th class="col-title" onClick={() => handleSort('title')}>
                 Tab {sortColumn === 'title' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
@@ -261,7 +279,6 @@ export function App() {
               <th class="col-memory" onClick={() => handleSort('memory')}>
                 Memory {sortColumn === 'memory' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
-              <th class="col-actions"></th>
             </tr>
           </thead>
           <tbody>
@@ -270,11 +287,19 @@ export function App() {
               const age = tab.created ? Date.now() - tab.created : null;
               
               return (
-                <tr 
-                  key={tab.id} 
-                  class={`tab-row ${status} ${tab.isActive ? 'is-active' : ''}`}
-                  onClick={() => focusTab(tab.id, tab.windowId)}
+                <tr
+                  key={tab.id}
+                  class={`tab-row ${status} ${tab.isActive ? 'is-active' : ''} ${selectedTabs.has(tab.id) ? 'selected' : ''}`}
+                  onClick={() => toggleTabSelection(tab.id)}
                 >
+                  <td class="col-checkbox" onClick={(e) => e.stopPropagation()}>
+                    <input
+                      type="checkbox"
+                      checked={selectedTabs.has(tab.id)}
+                      onChange={() => toggleTabSelection(tab.id)}
+                      class="tab-checkbox"
+                    />
+                  </td>
                   <td class="col-status">
                     <div class={`status-indicator ${status}`} title={status}></div>
                   </td>
@@ -297,18 +322,6 @@ export function App() {
                     {formatBytes(tab.networkActivity.bytesReceived)}
                   </td>
                   <td class="col-memory">{formatBytes(tab.memoryUsage)}</td>
-                  <td class="col-actions">
-                    <button 
-                      class="btn-close"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        closeTab(tab.id);
-                      }}
-                      title="Close tab"
-                    >
-                      ×
-                    </button>
-                  </td>
                 </tr>
               );
             })}
@@ -317,30 +330,42 @@ export function App() {
       </div>
 
       <footer class="footer">
-        <div class="filter-controls">
-          <label class="filter-label">Show tabs older than:</label>
-          <select
-            class="filter-select"
-            value={ageFilter}
-            onInput={(e) => setAgeFilter(Number((e.target as HTMLSelectElement).value))}
-          >
-            <option value="0">All tabs</option>
-            <option value={3600000}>1 hour</option>
-            <option value={21600000}>6 hours</option>
-            <option value={86400000}>1 day</option>
-            <option value={259200000}>3 days</option>
-            <option value={604800000}>1 week</option>
-            <option value={2592000000}>1 month</option>
-          </select>
-          {ageFilter > 0 && filteredTabs.length > 0 && (
-            <button class="btn-close-filtered" onClick={closeFilteredTabs}>
-              Close {filteredTabs.length} tab{filteredTabs.length !== 1 ? 's' : ''}
+        <div class="footer-left">
+          <button class="btn-select-dead" onClick={selectAllDeadTabs}>
+            Select All Dead
+          </button>
+          {selectedTabs.size > 0 && (
+            <button class="btn-close-selected" onClick={closeSelectedTabs}>
+              Close {selectedTabs.size} Selected
             </button>
           )}
         </div>
-        <button class="btn-refresh" onClick={loadTabData}>
-          ↻ Refresh
-        </button>
+        <div class="footer-right">
+          <div class="filter-controls">
+            <label class="filter-label">Show tabs older than:</label>
+            <select
+              class="filter-select"
+              value={ageFilter}
+              onInput={(e) => setAgeFilter(Number((e.target as HTMLSelectElement).value))}
+            >
+              <option value="0">All tabs</option>
+              <option value={3600000}>1 hour</option>
+              <option value={21600000}>6 hours</option>
+              <option value={86400000}>1 day</option>
+              <option value={259200000}>3 days</option>
+              <option value={604800000}>1 week</option>
+              <option value={2592000000}>1 month</option>
+            </select>
+            {ageFilter > 0 && filteredTabs.length > 0 && (
+              <button class="btn-close-filtered" onClick={closeFilteredTabs}>
+                Close {filteredTabs.length} Filtered
+              </button>
+            )}
+          </div>
+          <button class="btn-refresh" onClick={loadTabData}>
+            ↻ Refresh
+          </button>
+        </div>
       </footer>
     </div>
   );

@@ -349,12 +349,15 @@ export function App() {
               onInput={(e) => setAgeFilter(Number((e.target as HTMLSelectElement).value))}
             >
               <option value="0">All tabs</option>
-              <option value={3600000}>1 hour</option>
-              <option value={21600000}>6 hours</option>
               <option value={86400000}>1 day</option>
               <option value={259200000}>3 days</option>
               <option value={604800000}>1 week</option>
+              <option value={1209600000}>2 weeks</option>
               <option value={2592000000}>1 month</option>
+              <option value={5184000000}>2 months</option>
+              <option value={7776000000}>3 months</option>
+              <option value={15552000000}>6 months</option>
+              <option value={31536000000}>1 year</option>
             </select>
             {ageFilter > 0 && filteredTabs.length > 0 && (
               <button class="btn-close-filtered" onClick={closeFilteredTabs}>

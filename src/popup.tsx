@@ -257,7 +257,7 @@ export function App() {
           <thead>
             <tr>
               <th class="col-checkbox"></th>
-              <th class="col-status" title="🟢 Active (10s) | 🔵 Recent (5m) | 🟡 Idle (1h) | 🔴 Dead (>1h)"></th>
+              <th class="col-status" title="🟢 Active (10s) | 🔵 Recent (5m) | 🟡 Idle (1h) | 🔴 Dead (>1h)">?</th>
               <th class="col-title" onClick={() => handleSort('title')}>
                 Tab {sortColumn === 'title' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>

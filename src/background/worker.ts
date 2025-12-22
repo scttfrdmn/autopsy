@@ -5,9 +5,49 @@ const networkStats: NetworkStats = {};
 
 // Track tab creation times
 chrome.tabs.onCreated.addListener((tab) => {
-  if (tab.id) {
+  if (tab.id && tab.url) {
+    const now = Date.now();
     chrome.storage.local.set({
-      [`tab_${tab.id}_created`]: Date.now()
+      [`tab_${tab.id}_created`]: now,
+      [`url_${tab.url}_first_seen`]: now
+    });
+  }
+});
+
+// Initialize tab ages for existing tabs
+const initializeTabAges = async () => {
+  const tabs = await chrome.tabs.query({});
+  const now = Date.now();
+
+  for (const tab of tabs) {
+    if (tab.id && tab.url) {
+      // Check if we have a historical first-seen time for this URL
+      const result = await chrome.storage.local.get(`url_${tab.url}_first_seen`);
+      const firstSeen = result[`url_${tab.url}_first_seen`];
+
+      // Set tab created time (prefer historical if available)
+      chrome.storage.local.set({
+        [`tab_${tab.id}_created`]: firstSeen || now
+      });
+    }
+  }
+};
+
+// Run on startup and installation
+chrome.runtime.onStartup.addListener(initializeTabAges);
+chrome.runtime.onInstalled.addListener(initializeTabAges);
+
+// Track URL changes to maintain history
+chrome.tabs.onUpdated.addListener((_tabId, changeInfo, tab) => {
+  if (changeInfo.url && tab.url) {
+    // Check if we've seen this URL before
+    chrome.storage.local.get(`url_${tab.url}_first_seen`, (result) => {
+      if (!result[`url_${tab.url}_first_seen`]) {
+        // First time seeing this URL
+        chrome.storage.local.set({
+          [`url_${tab.url}_first_seen`]: Date.now()
+        });
+      }
     });
   }
 });

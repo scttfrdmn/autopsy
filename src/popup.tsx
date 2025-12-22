@@ -12,6 +12,9 @@ export function App() {
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [selectedTabs, setSelectedTabs] = useState<Set<number>>(new Set());
   const [lastUpdated, setLastUpdated] = useState<number>(Date.now());
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [recentlyClosed, setRecentlyClosed] = useState<chrome.tabs.Tab[]>([]);
+  const [showUndoToast, setShowUndoToast] = useState(false);
 
   useEffect(() => {
     loadTabData();
@@ -26,11 +29,52 @@ export function App() {
       setLastUpdated(prev => prev);
     }, 1000);
 
+    // Keyboard shortcuts
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Cmd/Ctrl+F - Focus search
+      if ((e.metaKey || e.ctrlKey) && e.key === 'f') {
+        e.preventDefault();
+        const searchInput = document.querySelector('.search-input') as HTMLInputElement;
+        searchInput?.focus();
+        return;
+      }
+
+      // Cmd/Ctrl+A - Select all (when not in input)
+      if ((e.metaKey || e.ctrlKey) && e.key === 'a' &&
+          !(e.target as HTMLElement).matches('input, textarea')) {
+        e.preventDefault();
+        toggleSelectAll();
+        return;
+      }
+
+      // Delete/Backspace - Close selected tabs (when not in input)
+      if ((e.key === 'Delete' || e.key === 'Backspace') &&
+          !(e.target as HTMLElement).matches('input, textarea') &&
+          selectedTabs.size > 0) {
+        e.preventDefault();
+        closeSelectedTabs();
+        return;
+      }
+
+      // Escape - Clear search or selection
+      if (e.key === 'Escape') {
+        if (searchQuery) {
+          setSearchQuery('');
+        } else if (selectedTabs.size > 0) {
+          setSelectedTabs(new Set());
+        }
+        return;
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+
     return () => {
       clearInterval(refreshInterval);
       clearInterval(updateInterval);
+      document.removeEventListener('keydown', handleKeyDown);
     };
-  }, []);
+  }, [selectedTabs, searchQuery]);
 
   const loadTabData = async () => {
     try {
@@ -91,12 +135,23 @@ export function App() {
     }
   };
 
-  const filteredTabs = ageFilter > 0
-    ? tabs.filter(tab => {
-        const age = tab.created ? Date.now() - tab.created : null;
-        return age !== null && age >= ageFilter;
-      })
-    : tabs;
+  const filteredTabs = tabs.filter(tab => {
+    // Age filter
+    if (ageFilter > 0) {
+      const age = tab.created ? Date.now() - tab.created : null;
+      if (!age || age < ageFilter) return false;
+    }
+
+    // Search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      const titleMatch = tab.title.toLowerCase().includes(query);
+      const urlMatch = tab.url.toLowerCase().includes(query);
+      if (!titleMatch && !urlMatch) return false;
+    }
+
+    return true;
+  });
 
   const sortedTabs = [...filteredTabs].sort((a, b) => {
     let aVal: any, bVal: any;
@@ -229,10 +284,36 @@ export function App() {
       if (!confirmed) return;
     }
 
+    // Store tabs for undo
     const tabIds = Array.from(selectedTabs);
+    const closingTabs = await chrome.tabs.query({});
+    const tabsToClose = closingTabs.filter(t => t.id && tabIds.includes(t.id));
+    setRecentlyClosed(tabsToClose);
+    setShowUndoToast(true);
+
+    // Close tabs
     await chrome.tabs.remove(tabIds);
     setTabs(tabs.filter(t => !tabIds.includes(t.id)));
     setSelectedTabs(new Set());
+
+    // Hide toast after 5 seconds
+    setTimeout(() => {
+      setShowUndoToast(false);
+      setRecentlyClosed([]);
+    }, 5000);
+  };
+
+  const undoClose = async () => {
+    for (const tab of recentlyClosed) {
+      await chrome.tabs.create({
+        url: tab.url,
+        pinned: tab.pinned,
+        index: tab.index
+      });
+    }
+    setShowUndoToast(false);
+    setRecentlyClosed([]);
+    loadTabData();
   };
 
   if (loading) {
@@ -254,10 +335,24 @@ export function App() {
             <span class="logo">⚕</span>
             Autopsy
           </h1>
+          <div class="search-box">
+            <input
+              type="text"
+              class="search-input"
+              placeholder="Search tabs..."
+              value={searchQuery}
+              onInput={(e) => setSearchQuery((e.target as HTMLInputElement).value)}
+            />
+            {searchQuery && (
+              <button class="search-clear" onClick={() => setSearchQuery('')}>
+                ×
+              </button>
+            )}
+          </div>
           <div class="stats">
             <div class="stat">
               <span class="stat-value">{sortedTabs.length}</span>
-              <span class="stat-label">{ageFilter > 0 ? 'filtered' : 'tabs'}</span>
+              <span class="stat-label">{ageFilter > 0 || searchQuery ? 'filtered' : 'tabs'}</span>
             </div>
             <div class="stat warning">
               <span class="stat-value">{deadTabs}</span>
@@ -284,11 +379,8 @@ export function App() {
               <th class="col-title" onClick={() => handleSort('title')}>
                 Tab {sortColumn === 'title' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
-              <th class="col-timestamp" onClick={() => handleSort('created')}>
-                Opened {sortColumn === 'created' && (sortDirection === 'asc' ? '↑' : '↓')}
-              </th>
               <th class="col-time" onClick={() => handleSort('created')}>
-                Age {sortColumn === 'created' && (sortDirection === 'asc' ? '↑' : '↓')}
+                Tab Age {sortColumn === 'created' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
               <th class="col-timestamp" onClick={() => handleSort('networkActivity')}>
                 Last Activity {sortColumn === 'networkActivity' && (sortDirection === 'asc' ? '↑' : '↓')}
@@ -296,7 +388,7 @@ export function App() {
               <th class="col-number" onClick={() => handleSort('requestCount')}>
                 Requests {sortColumn === 'requestCount' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
-              <th class="col-number" onClick={() => handleSort('bytesTransferred')}>
+              <th class="col-number" onClick={() => handleSort('bytesTransferred')} title="Network data transferred - high values indicate resource-heavy tabs">
                 Data {sortColumn === 'bytesTransferred' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
             </tr>
@@ -304,7 +396,7 @@ export function App() {
           <tbody>
             {sortedTabs.length === 0 ? (
               <tr>
-                <td colSpan={8} class="empty-state">
+                <td colSpan={7} class="empty-state">
                   {ageFilter > 0 ? 'No tabs match this age filter' : 'No tabs open'}
                 </td>
               </tr>
@@ -342,11 +434,10 @@ export function App() {
                       </div>
                     </div>
                   </td>
-                  <td class="col-timestamp">{formatTimestamp(tab.created)}</td>
                   <td class="col-time">{formatTime(age)}</td>
                   <td class="col-timestamp">{formatTimestamp(tab.networkActivity.lastActivity)}</td>
                   <td class="col-number">
-                    {tab.networkActivity.requestCount || '—'}
+                    {tab.networkActivity.requestCount ?? 0}
                   </td>
                   <td class="col-number">
                     {formatBytes(tab.networkActivity.bytesReceived)}
@@ -451,6 +542,15 @@ export function App() {
           </div>
         </div>
       </footer>
+
+      {showUndoToast && (
+        <div class="undo-toast">
+          <span>Closed {recentlyClosed.length} tab{recentlyClosed.length !== 1 ? 's' : ''}</span>
+          <button class="btn-undo" onClick={undoClose}>
+            Undo
+          </button>
+        </div>
+      )}
     </div>
   );
 }

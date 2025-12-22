@@ -27,29 +27,12 @@ export function App() {
       
       // Get stored creation times
       const storage = await chrome.storage.local.get(null);
-      
-      // Get memory info
-      let processes: { [key: string]: any } = {};
-      try {
-        processes = await (chrome as any).processes.getProcessInfo([], true);
-      } catch (e) {
-        console.warn('Memory info unavailable:', e);
-      }
-      
+
       // Build tab metrics
       const metrics: TabMetrics[] = allTabs.map(tab => {
         const createdKey = `tab_${tab.id}_created`;
         const created = storage[createdKey] || null;
-        
-        // Find process for memory usage
-        let memoryUsage: number | null = null;
-        if (tab.id) {
-          const process = Object.values(processes).find(p => 
-            p.tabs && p.tabs.includes(tab.id!)
-          );
-          memoryUsage = process?.privateMemory || null;
-        }
-        
+
         // Get network stats
         const network = networkStats[tab.id!] || {
           requestCount: 0,
@@ -67,7 +50,7 @@ export function App() {
           created,
           lastAccessed: (tab as any).lastAccessed || Date.now(),
           networkActivity: network,
-          memoryUsage,
+          memoryUsage: null,
           isActive: tab.active || false,
           isPinned: tab.pinned || false,
           isAudible: tab.audible || false
@@ -227,7 +210,6 @@ export function App() {
   }
 
   const deadTabs = sortedTabs.filter(t => getActivityStatus(t) === 'dead').length;
-  const totalMemory = sortedTabs.reduce((sum, t) => sum + (t.memoryUsage || 0), 0);
 
   return (
     <div class="app">
@@ -245,10 +227,6 @@ export function App() {
             <div class="stat warning">
               <span class="stat-value">{deadTabs}</span>
               <span class="stat-label">dead</span>
-            </div>
-            <div class="stat">
-              <span class="stat-value">{formatBytes(totalMemory)}</span>
-              <span class="stat-label">memory</span>
             </div>
           </div>
         </div>
@@ -277,9 +255,6 @@ export function App() {
               </th>
               <th class="col-number" onClick={() => handleSort('bytesTransferred')}>
                 Data {sortColumn === 'bytesTransferred' && (sortDirection === 'asc' ? '↑' : '↓')}
-              </th>
-              <th class="col-memory" onClick={() => handleSort('memory')}>
-                Memory {sortColumn === 'memory' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
             </tr>
           </thead>
@@ -323,7 +298,6 @@ export function App() {
                   <td class="col-number">
                     {formatBytes(tab.networkActivity.bytesReceived)}
                   </td>
-                  <td class="col-memory">{formatBytes(tab.memoryUsage)}</td>
                 </tr>
               );
             })}

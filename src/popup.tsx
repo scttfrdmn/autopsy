@@ -208,7 +208,7 @@ export function App() {
   }
 
   const deadTabs = sortedTabs.filter(t => getActivityStatus(t) === 'dead').length;
-  const totalMemory = tabs.reduce((sum, t) => sum + (t.memoryUsage || 0), 0);
+  const totalMemory = sortedTabs.reduce((sum, t) => sum + (t.memoryUsage || 0), 0);
 
   return (
     <div class="app">
@@ -220,8 +220,8 @@ export function App() {
           </h1>
           <div class="stats">
             <div class="stat">
-              <span class="stat-value">{tabs.length}</span>
-              <span class="stat-label">tabs</span>
+              <span class="stat-value">{sortedTabs.length}</span>
+              <span class="stat-label">{ageFilter > 0 ? 'filtered' : 'tabs'}</span>
             </div>
             <div class="stat warning">
               <span class="stat-value">{deadTabs}</span>
@@ -322,7 +322,7 @@ export function App() {
           <select
             class="filter-select"
             value={ageFilter}
-            onChange={(e) => setAgeFilter(Number((e.target as HTMLSelectElement).value))}
+            onInput={(e) => setAgeFilter(Number((e.target as HTMLSelectElement).value))}
           >
             <option value="0">All tabs</option>
             <option value={3600000}>1 hour</option>

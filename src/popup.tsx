@@ -238,8 +238,13 @@ export function App() {
   };
 
   const filteredTabs = tabs.filter(tab => {
-    // Filter out extension pages (including Autopsy itself)
-    if (tab.url.startsWith('chrome-extension://') || tab.url.startsWith('chrome://')) {
+    // Filter out extension pages (including Autopsy itself) and blank tabs
+    if (
+      tab.url.startsWith('chrome-extension://') ||
+      tab.url.startsWith('chrome://') ||
+      tab.url === 'about:blank' ||
+      !tab.url
+    ) {
       return false;
     }
 
@@ -967,7 +972,7 @@ export function App() {
                 class="col-status"
                 title="Status indicator: circle=active, diamond=recent, square=idle, x=inactive"
               >
-                <span aria-label="Status">?</span>
+                Status
               </th>
               <th
                 class="col-title"
@@ -1190,11 +1195,11 @@ export function App() {
             <span class="last-updated">Updated {formatTime(Date.now() - lastUpdated)}</span>
           </div>
           <div class="width-controls">
-            <label class="filter-label">Width:</label>
             <button
               class={`btn-width ${popupWidth === 600 ? 'active' : ''}`}
               onClick={() => saveWidth(600)}
               aria-label="Set small width"
+              title="Small (600px)"
             >
               S
             </button>
@@ -1202,6 +1207,7 @@ export function App() {
               class={`btn-width ${popupWidth === 800 ? 'active' : ''}`}
               onClick={() => saveWidth(800)}
               aria-label="Set medium width"
+              title="Medium (800px)"
             >
               M
             </button>
@@ -1209,6 +1215,7 @@ export function App() {
               class={`btn-width ${popupWidth === 1000 ? 'active' : ''}`}
               onClick={() => saveWidth(1000)}
               aria-label="Set large width"
+              title="Large (1000px)"
             >
               L
             </button>

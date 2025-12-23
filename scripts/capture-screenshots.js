@@ -42,7 +42,7 @@ const testUrls = [
   { url: 'https://medium.com', wait: 170 },
   { url: 'https://dev.to', wait: 140 },
   { url: 'https://npmjs.com', wait: 210 },
-  { url: 'https://typescript.org', wait: 260 },
+  { url: 'https://www.typescriptlang.org', wait: 260 },
   { url: 'https://react.dev', wait: 230 },
 ];
 
@@ -137,20 +137,23 @@ async function main() {
   console.log('✓ Storage cleared');
   await wait(1000); // Wait for storage to clear
 
-  // Set realistic fake ages for variety in screenshots
-  console.log('📅 Setting realistic tab ages...');
+  // Set realistic fake ages and network activity for variety in screenshots
+  console.log('📅 Setting realistic tab ages and activity...');
   const setupPage = await context.newPage();
   await setupPage.goto(popupUrl);
+
+  // Send message to background worker to set fake data
   await setupPage.evaluate(() => {
-    // Get all tabs and set varied ages
     return chrome.tabs.query({}).then(tabs => {
       const now = Date.now();
+
+      // Varied ages for realism
       const ages = [
-        5 * 60 * 1000,        // 5 minutes
-        15 * 60 * 1000,       // 15 minutes
-        45 * 60 * 1000,       // 45 minutes
-        2 * 60 * 60 * 1000,   // 2 hours
-        5 * 60 * 60 * 1000,   // 5 hours
+        5 * 60 * 1000,              // 5 minutes
+        15 * 60 * 1000,             // 15 minutes
+        45 * 60 * 1000,             // 45 minutes
+        2 * 60 * 60 * 1000,         // 2 hours
+        5 * 60 * 60 * 1000,         // 5 hours
         1 * 24 * 60 * 60 * 1000,    // 1 day
         3 * 24 * 60 * 60 * 1000,    // 3 days
         7 * 24 * 60 * 60 * 1000,    // 7 days
@@ -158,28 +161,59 @@ async function main() {
         30 * 24 * 60 * 60 * 1000,   // 30 days
       ];
 
+      // Activity patterns for varied statuses
+      const activityPatterns = [
+        { lastActivity: now - 10 * 1000, requestCount: 15, bytesReceived: 256000 },         // Active (< 30s)
+        { lastActivity: now - 60 * 1000, requestCount: 8, bytesReceived: 128000 },          // Recent (1min)
+        { lastActivity: now - 5 * 60 * 1000, requestCount: 5, bytesReceived: 64000 },       // Recent (5min)
+        { lastActivity: now - 45 * 60 * 1000, requestCount: 3, bytesReceived: 32000 },      // Idle (45min)
+        { lastActivity: now - 2 * 60 * 60 * 1000, requestCount: 2, bytesReceived: 16000 },  // Idle (2h)
+        { lastActivity: now - 6 * 60 * 60 * 1000, requestCount: 1, bytesReceived: 8000 },   // Inactive (6h)
+        { lastActivity: now - 24 * 60 * 60 * 1000, requestCount: 0, bytesReceived: 0 },     // Inactive (1d)
+        { lastActivity: null, requestCount: 0, bytesReceived: 0 },                          // Inactive (never)
+      ];
+
       const storageData = {};
+      const networkStatsData = {};
+
       tabs.forEach((tab, index) => {
-        if (tab.id && tab.url && !tab.url.startsWith('chrome-extension://')) {
-          // Assign varied ages in a cycling pattern
+        if (tab.id && tab.url && !tab.url.startsWith('chrome-extension://') && tab.url !== 'about:blank') {
+          // Set varied age
           const ageOffset = ages[index % ages.length];
           const created = now - ageOffset;
           storageData[`tab_${tab.id}_created`] = created;
+
+          // Set varied activity
+          const activity = activityPatterns[index % activityPatterns.length];
+          networkStatsData[tab.id] = {
+            requestCount: activity.requestCount,
+            bytesReceived: activity.bytesReceived,
+            lastActivity: activity.lastActivity,
+            firstActivity: created,
+          };
         }
       });
 
-      return chrome.storage.local.set(storageData);
+      // Set storage data
+      return chrome.storage.local.set(storageData).then(() => {
+        // Send network stats to background worker
+        return chrome.runtime.sendMessage({
+          action: 'setFakeNetworkStats',
+          stats: networkStatsData
+        });
+      });
     });
   });
+
   await setupPage.close();
-  console.log('✓ Realistic ages set');
-  await wait(1000);
+  console.log('✓ Realistic ages and activity set');
+  await wait(4000); // Wait longer for data to propagate to all contexts
 
   // Screenshot 1: Main Interface
   console.log('\n📸 Screenshot 1: Main Interface...');
   const popup1 = await context.newPage();
   await popup1.goto(popupUrl);
-  await wait(2000); // Wait for data to load
+  await wait(3000); // Wait for data to load completely
 
   // Set to large width (L button)
   try {

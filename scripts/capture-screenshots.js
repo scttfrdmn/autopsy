@@ -150,11 +150,18 @@ async function main() {
     console.log('   ⚠ Could not sort by age, continuing...');
   }
 
-  await popup1.setViewportSize({ width: 1280, height: 800 });
-  await popup1.screenshot({
-    path: join(screenshotsPath, '01-main-interface.png'),
-    fullPage: true
-  });
+  // Capture just the app element (removes white space)
+  const appElement = await popup1.$('.app');
+  if (appElement) {
+    await appElement.screenshot({
+      path: join(screenshotsPath, '01-main-interface.png')
+    });
+  } else {
+    await popup1.screenshot({
+      path: join(screenshotsPath, '01-main-interface.png'),
+      fullPage: true
+    });
+  }
   console.log('   ✓ Saved: 01-main-interface.png');
 
   // Screenshot 2: Group by Domain
@@ -182,11 +189,18 @@ async function main() {
     console.log('   ⚠ Could not activate grouping, continuing...');
   }
 
-  await popup2.setViewportSize({ width: 1280, height: 800 });
-  await popup2.screenshot({
-    path: join(screenshotsPath, '02-group-by-domain.png'),
-    fullPage: true
-  });
+  // Capture just the app element
+  const appElement2 = await popup2.$('.app');
+  if (appElement2) {
+    await appElement2.screenshot({
+      path: join(screenshotsPath, '02-group-by-domain.png')
+    });
+  } else {
+    await popup2.screenshot({
+      path: join(screenshotsPath, '02-group-by-domain.png'),
+      fullPage: true
+    });
+  }
   console.log('   ✓ Saved: 02-group-by-domain.png');
 
   // Screenshot 3: Group by Status
@@ -218,11 +232,18 @@ async function main() {
     console.log('   ⚠ Could not cycle grouping, continuing...');
   }
 
-  await popup3.setViewportSize({ width: 1280, height: 800 });
-  await popup3.screenshot({
-    path: join(screenshotsPath, '03-group-by-status.png'),
-    fullPage: true
-  });
+  // Capture just the app element
+  const appElement3 = await popup3.$('.app');
+  if (appElement3) {
+    await appElement3.screenshot({
+      path: join(screenshotsPath, '03-group-by-status.png')
+    });
+  } else {
+    await popup3.screenshot({
+      path: join(screenshotsPath, '03-group-by-status.png'),
+      fullPage: true
+    });
+  }
   console.log('   ✓ Saved: 03-group-by-status.png');
 
   // Screenshot 4: Bulk Operations (with selections)
@@ -251,11 +272,18 @@ async function main() {
     console.log('   ⚠ Could not select tabs, continuing...');
   }
 
-  await popup4.setViewportSize({ width: 1280, height: 800 });
-  await popup4.screenshot({
-    path: join(screenshotsPath, '04-bulk-operations.png'),
-    fullPage: true
-  });
+  // Capture just the app element
+  const appElement4 = await popup4.$('.app');
+  if (appElement4) {
+    await appElement4.screenshot({
+      path: join(screenshotsPath, '04-bulk-operations.png')
+    });
+  } else {
+    await popup4.screenshot({
+      path: join(screenshotsPath, '04-bulk-operations.png'),
+      fullPage: true
+    });
+  }
   console.log('   ✓ Saved: 04-bulk-operations.png');
 
   // Screenshot 5: Light Theme
@@ -285,11 +313,18 @@ async function main() {
     console.log('   ⚠ Could not change theme, continuing...');
   }
 
-  await popup5.setViewportSize({ width: 1280, height: 800 });
-  await popup5.screenshot({
-    path: join(screenshotsPath, '05-light-theme.png'),
-    fullPage: true
-  });
+  // Capture just the app element
+  const appElement5 = await popup5.$('.app');
+  if (appElement5) {
+    await appElement5.screenshot({
+      path: join(screenshotsPath, '05-light-theme.png')
+    });
+  } else {
+    await popup5.screenshot({
+      path: join(screenshotsPath, '05-light-theme.png'),
+      fullPage: true
+    });
+  }
   console.log('   ✓ Saved: 05-light-theme.png');
 
   console.log('\n✅ All screenshots captured successfully!');

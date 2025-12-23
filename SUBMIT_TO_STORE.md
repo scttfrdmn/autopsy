@@ -96,8 +96,9 @@ Upload in this order (first screenshot appears in search results):
 ### 6. Promotional Images (Optional but Recommended)
 
 **Small tile (440×280):**
-- Not created yet - you can skip for now or create later
-- Can be added after initial publication
+- ✅ **Upload:** `assets/promo-tile-440x280.png`
+- Features icon, title, and tagline
+- Professional dark blue design
 
 **Marquee (1400×560):**
 - Optional

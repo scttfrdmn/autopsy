@@ -16,7 +16,7 @@ export function App() {
   const [recentlyClosed, setRecentlyClosed] = useState<chrome.tabs.Tab[]>([]);
   const [showUndoToast, setShowUndoToast] = useState(false);
   const [groupByDomain, setGroupByDomain] = useState(false);
-  // const [collapsedDomains, setCollapsedDomains] = useState<Set<string>>(new Set()); // WIP
+  const [collapsedDomains, setCollapsedDomains] = useState<Set<string>>(new Set());
   const [popupWidth, setPopupWidth] = useState(800);
 
   useEffect(() => {
@@ -218,32 +218,32 @@ export function App() {
     return sortDirection === 'asc' ? comparison : -comparison;
   });
 
-  // Group tabs by domain if enabled (WIP - rendering not implemented yet)
-  // const groupedTabs = groupByDomain
-  //   ? sortedTabs.reduce((groups, tab) => {
-  //       const domain = new URL(tab.url).hostname;
-  //       if (!groups[domain]) {
-  //         groups[domain] = [];
-  //       }
-  //       groups[domain].push(tab);
-  //       return groups;
-  //     }, {} as Record<string, TabMetrics[]>)
-  //   : {};
+  // Group tabs by domain if enabled
+  const groupedTabs = groupByDomain
+    ? sortedTabs.reduce((groups, tab) => {
+        const domain = new URL(tab.url).hostname;
+        if (!groups[domain]) {
+          groups[domain] = [];
+        }
+        groups[domain].push(tab);
+        return groups;
+      }, {} as Record<string, TabMetrics[]>)
+    : {};
 
-  // const domainGroups = Object.entries(groupedTabs).sort(([domainA, tabsA], [domainB, tabsB]) => {
-  //   // Sort by tab count (descending)
-  //   return tabsB.length - tabsA.length;
-  // });
+  const domainGroups = Object.entries(groupedTabs).sort(([, tabsA], [, tabsB]) => {
+    // Sort by tab count (descending)
+    return tabsB.length - tabsA.length;
+  });
 
-  // const toggleDomain = (domain: string) => {
-  //   const newCollapsed = new Set(collapsedDomains);
-  //   if (newCollapsed.has(domain)) {
-  //     newCollapsed.delete(domain);
-  //   } else {
-  //     newCollapsed.add(domain);
-  //   }
-  //   setCollapsedDomains(newCollapsed);
-  // };
+  const toggleDomain = (domain: string) => {
+    const newCollapsed = new Set(collapsedDomains);
+    if (newCollapsed.has(domain)) {
+      newCollapsed.delete(domain);
+    } else {
+      newCollapsed.add(domain);
+    }
+    setCollapsedDomains(newCollapsed);
+  };
 
   const formatBytes = (bytes: number | null): string => {
     if (!bytes) return '—';
@@ -384,6 +384,73 @@ export function App() {
     await chrome.storage.local.set({ popupWidth: width });
   };
 
+  const renderTabRow = (tab: TabMetrics) => {
+    const status = getActivityStatus(tab);
+    const age = tab.created ? Date.now() - tab.created : null;
+
+    return (
+      <tr
+        key={tab.id}
+        class={`tab-row ${status} ${tab.isActive ? 'is-active' : ''} ${selectedTabs.has(tab.id) ? 'selected' : ''}`}
+        onClick={async () => {
+          await chrome.windows.update(tab.windowId, { focused: true });
+          await chrome.tabs.update(tab.id, { active: true });
+        }}
+        role="row"
+        aria-label={`${tab.title}, ${status}`}
+      >
+        <td class="col-checkbox" onClick={(e) => e.stopPropagation()} role="cell">
+          <input
+            type="checkbox"
+            checked={selectedTabs.has(tab.id)}
+            onChange={() => toggleTabSelection(tab.id)}
+            class="tab-checkbox"
+            aria-label={`Select ${tab.title}`}
+          />
+        </td>
+        <td class="col-status" role="cell">
+          <div
+            class={`status-indicator ${status}`}
+            role="img"
+            aria-label={`Status: ${status}`}
+            title={status}
+          ></div>
+        </td>
+        <td class="col-title">
+          <div class="tab-info">
+            {tab.favIconUrl && <img src={tab.favIconUrl} class="favicon" alt="" />}
+            <div class="tab-text">
+              <div class="tab-title">
+                {tab.groupInfo && (
+                  <span
+                    class={`group-indicator group-${tab.groupInfo.color}`}
+                    title={tab.groupInfo.title || `Group (${tab.groupInfo.color})`}
+                    aria-label={`Tab group: ${tab.groupInfo.title || tab.groupInfo.color}`}
+                  ></span>
+                )}
+                {tab.title}
+                {tab.isDiscarded && (
+                  <span class="suspended-badge" title="Tab suspended by Chrome to save memory">
+                    💤
+                  </span>
+                )}
+              </div>
+              <div class="tab-url">{new URL(tab.url).hostname}</div>
+            </div>
+          </div>
+        </td>
+        <td class="col-time">{formatTime(age)}</td>
+        <td class="col-timestamp">{formatTimestamp(tab.networkActivity.lastActivity)}</td>
+        <td class="col-number">
+          {tab.networkActivity.requestCount ?? 0}
+        </td>
+        <td class="col-number">
+          {formatBytes(tab.networkActivity.bytesReceived)}
+        </td>
+      </tr>
+    );
+  };
+
   return (
     <div class="app" role="main" style={`width: ${popupWidth}px`}>
       <header class="header" role="banner">
@@ -473,73 +540,26 @@ export function App() {
                   {ageFilter > 0 ? 'No tabs match this age filter' : 'No tabs open'}
                 </td>
               </tr>
-            ) : (
-              sortedTabs.map(tab => {
-                const status = getActivityStatus(tab);
-                const age = tab.created ? Date.now() - tab.created : null;
-
+            ) : groupByDomain ? (
+              // Grouped view
+              domainGroups.map(([domain, tabs]) => {
+                const isCollapsed = collapsedDomains.has(domain);
                 return (
-                <tr
-                  key={tab.id}
-                  class={`tab-row ${status} ${tab.isActive ? 'is-active' : ''} ${selectedTabs.has(tab.id) ? 'selected' : ''}`}
-                  onClick={async () => {
-                    await chrome.windows.update(tab.windowId, { focused: true });
-                    await chrome.tabs.update(tab.id, { active: true });
-                  }}
-                  role="row"
-                  aria-label={`${tab.title}, ${status}`}
-                >
-                  <td class="col-checkbox" onClick={(e) => e.stopPropagation()} role="cell">
-                    <input
-                      type="checkbox"
-                      checked={selectedTabs.has(tab.id)}
-                      onChange={() => toggleTabSelection(tab.id)}
-                      class="tab-checkbox"
-                      aria-label={`Select ${tab.title}`}
-                    />
-                  </td>
-                  <td class="col-status" role="cell">
-                    <div
-                      class={`status-indicator ${status}`}
-                      role="img"
-                      aria-label={`Status: ${status}`}
-                      title={status}
-                    ></div>
-                  </td>
-                  <td class="col-title">
-                    <div class="tab-info">
-                      {tab.favIconUrl && <img src={tab.favIconUrl} class="favicon" alt="" />}
-                      <div class="tab-text">
-                        <div class="tab-title">
-                          {tab.groupInfo && (
-                            <span
-                              class={`group-indicator group-${tab.groupInfo.color}`}
-                              title={tab.groupInfo.title || `Group (${tab.groupInfo.color})`}
-                              aria-label={`Tab group: ${tab.groupInfo.title || tab.groupInfo.color}`}
-                            ></span>
-                          )}
-                          {tab.title}
-                          {tab.isDiscarded && (
-                            <span class="suspended-badge" title="Tab suspended by Chrome to save memory">
-                              💤
-                            </span>
-                          )}
-                        </div>
-                        <div class="tab-url">{new URL(tab.url).hostname}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td class="col-time">{formatTime(age)}</td>
-                  <td class="col-timestamp">{formatTimestamp(tab.networkActivity.lastActivity)}</td>
-                  <td class="col-number">
-                    {tab.networkActivity.requestCount ?? 0}
-                  </td>
-                  <td class="col-number">
-                    {formatBytes(tab.networkActivity.bytesReceived)}
-                  </td>
-                </tr>
+                  <>
+                    <tr class="domain-header" key={`domain-${domain}`}>
+                      <td colSpan={7} onClick={() => toggleDomain(domain)} class="domain-header-cell">
+                        <span class="domain-toggle">{isCollapsed ? '▸' : '▾'}</span>
+                        <span class="domain-name">{domain}</span>
+                        <span class="domain-count">({tabs.length})</span>
+                      </td>
+                    </tr>
+                    {!isCollapsed && tabs.map(tab => renderTabRow(tab))}
+                  </>
                 );
               })
+            ) : (
+              // Flat view
+              sortedTabs.map(tab => renderTabRow(tab))
             )}
           </tbody>
         </table>

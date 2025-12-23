@@ -297,6 +297,46 @@ th:hover {
 }
 
 
+/* Domain grouping */
+.domain-header {
+  background: var(--bg-elevated);
+  border-top: 2px solid var(--border-strong);
+  border-bottom: 1px solid var(--border-strong);
+  cursor: pointer;
+  user-select: none;
+}
+
+.domain-header:hover {
+  background: var(--hover-bg);
+}
+
+.domain-header-cell {
+  padding: var(--spacing-md) !important;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.domain-toggle {
+  color: var(--text-secondary);
+  font-size: 12px;
+  width: 12px;
+  display: inline-block;
+}
+
+.domain-name {
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+.domain-count {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+
 /* Table rows */
 .tab-row {
   cursor: pointer;

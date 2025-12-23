@@ -101,8 +101,9 @@ Upload in this order (first screenshot appears in search results):
 - Professional dark blue design
 
 **Marquee (1400×560):**
-- Optional
-- Can be added after initial publication
+- ✅ **Upload:** `assets/promo-marquee-1400x560.png`
+- Features icon, title, key features list, and mockup
+- Professional dark blue design with tab preview
 
 ### 7. Privacy Practices
 

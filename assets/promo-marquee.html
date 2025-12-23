@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1400, height=560">
+  <title>Autopsy Marquee</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      width: 1400px;
+      height: 560px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #1a2332 0%, #2d3f5f 50%, #1a2332 100%);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: white;
+      position: relative;
+      overflow: hidden;
+      padding: 60px 80px;
+    }
+
+    /* Background pattern */
+    body::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image:
+        repeating-linear-gradient(90deg, rgba(255,255,255,0.02) 0px, transparent 1px, transparent 40px),
+        repeating-linear-gradient(0deg, rgba(255,255,255,0.02) 0px, transparent 1px, transparent 40px);
+      opacity: 0.5;
+    }
+
+    .left-section {
+      flex: 1;
+      z-index: 1;
+      max-width: 600px;
+    }
+
+    .icon {
+      width: 120px;
+      height: 120px;
+      margin-bottom: 32px;
+      background: white;
+      border-radius: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+    }
+
+    .icon svg {
+      width: 80px;
+      height: 80px;
+    }
+
+    .title {
+      font-size: 64px;
+      font-weight: 800;
+      margin-bottom: 16px;
+      letter-spacing: -1.5px;
+      text-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      line-height: 1.1;
+    }
+
+    .tagline {
+      font-size: 28px;
+      font-weight: 500;
+      color: #a8d5e5;
+      margin-bottom: 32px;
+      letter-spacing: 0.3px;
+      line-height: 1.3;
+    }
+
+    .features {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .feature {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 18px;
+      color: #d4e6ed;
+    }
+
+    .feature-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      background: rgba(79, 179, 217, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .feature-icon svg {
+      width: 16px;
+      height: 16px;
+      fill: #4fb3d9;
+    }
+
+    .cta {
+      font-size: 16px;
+      color: #8ab4c8;
+      font-weight: 500;
+      margin-top: 24px;
+    }
+
+    .cta .highlight {
+      color: #4fb3d9;
+      font-weight: 700;
+    }
+
+    .right-section {
+      flex: 1;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      max-width: 600px;
+    }
+
+    .mockup {
+      width: 100%;
+      max-width: 480px;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+    }
+
+    .mockup-header {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .mockup-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .mockup-dot:nth-child(1) { background: #ff5f57; }
+    .mockup-dot:nth-child(2) { background: #ffbd2e; }
+    .mockup-dot:nth-child(3) { background: #28ca42; }
+
+    .mockup-content {
+      background: #2d3f5f;
+      border-radius: 8px;
+      padding: 16px;
+      color: white;
+      font-size: 13px;
+    }
+
+    .mockup-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+
+    .mockup-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .status-indicator {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .status-active { background: #28ca42; }
+    .status-recent { background: #4fb3d9; }
+    .status-idle { background: #ffbd2e; }
+
+    .mockup-text {
+      flex: 1;
+      font-size: 11px;
+      opacity: 0.9;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .mockup-badge {
+      background: rgba(79, 179, 217, 0.2);
+      color: #4fb3d9;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="left-section">
+    <div class="icon">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" fill="none">
+        <!-- Browser tab -->
+        <rect x="10" y="20" width="50" height="35" rx="4" fill="#2d3f5f" stroke="#1a2332" stroke-width="2.5"/>
+        <circle cx="17" cy="27" r="2.5" fill="#ff5f57"/>
+        <circle cx="25" cy="27" r="2.5" fill="#ffbd2e"/>
+        <circle cx="33" cy="27" r="2.5" fill="#28ca42"/>
+
+        <!-- X mark -->
+        <line x1="25" y1="40" x2="35" y2="50" stroke="#ff5f57" stroke-width="3.5" stroke-linecap="round"/>
+        <line x1="35" y1="40" x2="25" y2="50" stroke="#ff5f57" stroke-width="3.5" stroke-linecap="round"/>
+
+        <!-- Magnifying glass -->
+        <circle cx="55" cy="50" r="12" fill="#4fb3d9" stroke="#2d3f5f" stroke-width="3"/>
+        <circle cx="55" cy="50" r="7.5" fill="none" stroke="white" stroke-width="2.5"/>
+        <line x1="62" y1="57" x2="70" y2="65" stroke="#2d3f5f" stroke-width="4.5" stroke-linecap="round"/>
+        <line x1="62" y1="57" x2="70" y2="65" stroke="#4fb3d9" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+    </div>
+
+    <h1 class="title">Autopsy</h1>
+    <p class="tagline">Postmortem analysis for your tabs<br>Find what to close</p>
+
+    <div class="features">
+      <div class="feature">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+          </svg>
+        </div>
+        <span><strong>Real-time network tracking</strong> — See which tabs are actually active</span>
+      </div>
+
+      <div class="feature">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+          </svg>
+        </div>
+        <span><strong>Smart status indicators</strong> — Active, Recent, Idle, Dead tabs</span>
+      </div>
+
+      <div class="feature">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+          </svg>
+        </div>
+        <span><strong>Bulk operations</strong> — Close duplicates, pin/unpin, move tabs</span>
+      </div>
+
+      <div class="feature">
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+          </svg>
+        </div>
+        <span><strong>Export your data</strong> — CSV and JSON for analysis</span>
+      </div>
+    </div>
+
+    <div class="cta">
+      <span class="highlight">Lightweight</span> • <span class="highlight">Privacy-first</span> • <span class="highlight">Open source</span>
+    </div>
+  </div>
+
+  <div class="right-section">
+    <div class="mockup">
+      <div class="mockup-header">
+        <div class="mockup-dot"></div>
+        <div class="mockup-dot"></div>
+        <div class="mockup-dot"></div>
+      </div>
+      <div class="mockup-content">
+        <div class="mockup-row">
+          <div class="status-indicator status-active"></div>
+          <div class="mockup-text">GitHub - Repository Dashboard</div>
+          <div class="mockup-badge">2.1 MB</div>
+        </div>
+        <div class="mockup-row">
+          <div class="status-indicator status-recent"></div>
+          <div class="mockup-text">Stack Overflow - How to optimize React...</div>
+          <div class="mockup-badge">5m ago</div>
+        </div>
+        <div class="mockup-row">
+          <div class="status-indicator status-idle"></div>
+          <div class="mockup-text">MDN Web Docs - JavaScript Reference</div>
+          <div class="mockup-badge">45m ago</div>
+        </div>
+        <div class="mockup-row">
+          <div class="status-indicator status-idle"></div>
+          <div class="mockup-text">Reddit - r/programming</div>
+          <div class="mockup-badge">2h ago</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

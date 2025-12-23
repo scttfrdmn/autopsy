@@ -890,6 +890,32 @@ td {
   border-color: var(--text-muted);
 }
 
+.export-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.btn-export {
+  padding: var(--spacing-xs) var(--spacing-md);
+  background: var(--bg-elevated);
+  border: 1px solid var(--status-recent);
+  color: var(--status-recent);
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: var(--font-ui);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn-export:hover {
+  background: rgba(77, 166, 255, 0.1);
+  border-color: #6bb6ff;
+  color: #6bb6ff;
+}
+
 /* Undo Toast */
 .undo-toast {
   position: fixed;

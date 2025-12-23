@@ -531,6 +531,103 @@ export function App() {
     document.documentElement.setAttribute('data-theme', effectiveTheme);
   }, [theme]);
 
+  const exportToCSV = () => {
+    const headers = [
+      'Tab ID',
+      'Title',
+      'URL',
+      'Domain',
+      'Window ID',
+      'Tab Age (days)',
+      'Last Accessed',
+      'Status',
+      'Is Pinned',
+      'Is Audible',
+      'Is Discarded',
+      'Group',
+      'Request Count',
+      'Bytes Transferred',
+      'Last Network Activity'
+    ];
+
+    const rows = sortedTabs.map(tab => {
+      const status = getActivityStatus(tab);
+      const age = tab.created ? (Date.now() - tab.created) / (1000 * 60 * 60 * 24) : null;
+      const domain = new URL(tab.url).hostname;
+
+      return [
+        tab.id,
+        `"${tab.title.replace(/"/g, '""')}"`, // Escape quotes
+        `"${tab.url}"`,
+        domain,
+        tab.windowId,
+        age ? age.toFixed(2) : '',
+        tab.lastAccessed ? new Date(tab.lastAccessed).toISOString() : '',
+        status,
+        tab.isPinned ? 'Yes' : 'No',
+        tab.isAudible ? 'Yes' : 'No',
+        tab.isDiscarded ? 'Yes' : 'No',
+        tab.groupInfo?.title || '',
+        tab.networkActivity.requestCount,
+        tab.networkActivity.bytesReceived,
+        tab.networkActivity.lastActivity ? new Date(tab.networkActivity.lastActivity).toISOString() : ''
+      ].join(',');
+    });
+
+    const csv = [headers.join(','), ...rows].join('\n');
+    const timestamp = new Date().toISOString().split('T')[0];
+    downloadFile(csv, `autopsy-export-${timestamp}.csv`, 'text/csv');
+  };
+
+  const exportToJSON = () => {
+    const data = sortedTabs.map(tab => {
+      const status = getActivityStatus(tab);
+      const age = tab.created ? Date.now() - tab.created : null;
+      const domain = new URL(tab.url).hostname;
+
+      return {
+        id: tab.id,
+        title: tab.title,
+        url: tab.url,
+        domain,
+        windowId: tab.windowId,
+        ageMs: age,
+        ageDays: age ? (age / (1000 * 60 * 60 * 24)).toFixed(2) : null,
+        created: tab.created,
+        lastAccessed: tab.lastAccessed,
+        status,
+        isPinned: tab.isPinned,
+        isAudible: tab.isAudible,
+        isDiscarded: tab.isDiscarded,
+        group: tab.groupInfo ? {
+          id: tab.groupInfo.id,
+          title: tab.groupInfo.title,
+          color: tab.groupInfo.color
+        } : null,
+        networkActivity: {
+          requestCount: tab.networkActivity.requestCount,
+          bytesReceived: tab.networkActivity.bytesReceived,
+          lastActivity: tab.networkActivity.lastActivity,
+          firstActivity: tab.networkActivity.firstActivity
+        }
+      };
+    });
+
+    const json = JSON.stringify(data, null, 2);
+    const timestamp = new Date().toISOString().split('T')[0];
+    downloadFile(json, `autopsy-export-${timestamp}.json`, 'application/json');
+  };
+
+  const downloadFile = (content: string, filename: string, type: string) => {
+    const blob = new Blob([content], { type });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const renderTabRow = (tab: TabMetrics) => {
     const status = getActivityStatus(tab);
     const age = tab.created ? Date.now() - tab.created : null;
@@ -888,6 +985,25 @@ export function App() {
               aria-label="Set large width"
             >
               L
+            </button>
+          </div>
+          <div class="export-controls">
+            <label class="filter-label">Export:</label>
+            <button
+              class="btn-export"
+              onClick={exportToCSV}
+              aria-label="Export tab data to CSV"
+              title="Export to CSV for spreadsheet analysis"
+            >
+              📊 CSV
+            </button>
+            <button
+              class="btn-export"
+              onClick={exportToJSON}
+              aria-label="Export tab data to JSON"
+              title="Export to JSON for programmatic processing"
+            >
+              📄 JSON
             </button>
           </div>
         </div>

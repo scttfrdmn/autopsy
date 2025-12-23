@@ -337,6 +337,27 @@ th:hover {
   font-weight: 500;
 }
 
+.btn-select-domain {
+  padding: 4px 10px;
+  margin-left: auto;
+  background: var(--bg-elevated);
+  border: 1px solid var(--status-active);
+  color: var(--status-active);
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: var(--font-ui);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn-select-domain:hover {
+  background: rgba(0, 217, 163, 0.1);
+  border-color: #00edb5;
+  color: #00edb5;
+}
+
 /* Table rows */
 .tab-row {
   cursor: pointer;
@@ -671,6 +692,46 @@ td {
   background: rgba(255, 107, 107, 0.1);
   border-color: #ff5252;
   color: #ff5252;
+}
+
+.btn-bulk-action {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  background: var(--bg-elevated);
+  border: 1px solid var(--status-active);
+  color: var(--status-active);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--font-ui);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn-bulk-action:hover {
+  background: rgba(0, 217, 163, 0.1);
+  border-color: #00edb5;
+  color: #00edb5;
+}
+
+.btn-close-duplicates {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  background: var(--bg-elevated);
+  border: 1px solid var(--status-idle);
+  color: var(--status-idle);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--font-ui);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn-close-duplicates:hover {
+  background: rgba(255, 184, 77, 0.1);
+  border-color: #ffb84d;
+  color: #ffb84d;
 }
 
 .btn-close-selected {

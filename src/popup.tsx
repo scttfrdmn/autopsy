@@ -245,6 +245,11 @@ export function App() {
     setCollapsedDomains(newCollapsed);
   };
 
+  const selectDomain = (domain: string) => {
+    const domainTabs = tabs.filter(t => new URL(t.url).hostname === domain);
+    setSelectedTabs(new Set(domainTabs.map(t => t.id)));
+  };
+
   const formatBytes = (bytes: number | null): string => {
     if (!bytes) return '—';
     const mb = bytes / (1024 * 1024);
@@ -301,6 +306,78 @@ export function App() {
     await chrome.tabs.remove(tabIds);
     setTabs(tabs.filter(t => !tabIds.includes(t.id)));
     setAgeFilter(0); // Reset filter after closing
+  };
+
+  const findDuplicates = () => {
+    const urlMap = new Map<string, TabMetrics[]>();
+    tabs.forEach(tab => {
+      const url = tab.url;
+      if (!urlMap.has(url)) {
+        urlMap.set(url, []);
+      }
+      urlMap.get(url)!.push(tab);
+    });
+
+    // Return only URLs with duplicates
+    return Array.from(urlMap.entries())
+      .filter(([, tabs]) => tabs.length > 1)
+      .map(([url, tabs]) => ({ url, tabs }));
+  };
+
+  const closeDuplicates = async () => {
+    const duplicates = findDuplicates();
+    if (duplicates.length === 0) {
+      alert('No duplicate tabs found');
+      return;
+    }
+
+    // Keep newest tab of each duplicate set, close older ones
+    const tabsToClose: number[] = [];
+    duplicates.forEach(({ tabs: dupTabs }) => {
+      // Sort by created time, keep newest
+      const sorted = [...dupTabs].sort((a, b) => (b.created || 0) - (a.created || 0));
+      // Close all except the first (newest)
+      sorted.slice(1).forEach(tab => tabsToClose.push(tab.id));
+    });
+
+    const confirmed = confirm(`Close ${tabsToClose.length} duplicate tabs? (Keeping newest of each)`);
+    if (!confirmed) return;
+
+    await chrome.tabs.remove(tabsToClose);
+    setTabs(tabs.filter(t => !tabsToClose.includes(t.id)));
+  };
+
+  const bulkPin = async () => {
+    if (selectedTabs.size === 0) return;
+    const tabIds = Array.from(selectedTabs);
+    await Promise.all(tabIds.map(id => chrome.tabs.update(id, { pinned: true })));
+    setTabs(tabs.map(t => tabIds.includes(t.id) ? { ...t, isPinned: true } : t));
+  };
+
+  const bulkUnpin = async () => {
+    if (selectedTabs.size === 0) return;
+    const tabIds = Array.from(selectedTabs);
+    await Promise.all(tabIds.map(id => chrome.tabs.update(id, { pinned: false })));
+    setTabs(tabs.map(t => tabIds.includes(t.id) ? { ...t, isPinned: false } : t));
+  };
+
+  const moveToNewWindow = async () => {
+    if (selectedTabs.size === 0) return;
+
+    const tabIds = Array.from(selectedTabs);
+    const firstTabId = tabIds[0];
+
+    // Create new window with first tab
+    const newWindow = await chrome.windows.create({ tabId: firstTabId });
+
+    // Move remaining tabs to new window
+    if (tabIds.length > 1) {
+      await chrome.tabs.move(tabIds.slice(1), { windowId: newWindow.id, index: -1 });
+    }
+
+    // Clear selection and refresh
+    setSelectedTabs(new Set());
+    loadTabData();
   };
 
   const toggleTabSelection = (tabId: number) => {
@@ -551,6 +628,16 @@ export function App() {
                         <span class="domain-toggle">{isCollapsed ? '▸' : '▾'}</span>
                         <span class="domain-name">{domain}</span>
                         <span class="domain-count">({tabs.length})</span>
+                        <button
+                          class="btn-select-domain"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            selectDomain(domain);
+                          }}
+                          aria-label={`Select all ${tabs.length} tabs from ${domain}`}
+                        >
+                          Select All
+                        </button>
                       </td>
                     </tr>
                     {!isCollapsed && tabs.map(tab => renderTabRow(tab))}
@@ -594,14 +681,44 @@ export function App() {
             Select All Dead
           </button>
           {selectedTabs.size > 0 && (
-            <button
-              class="btn-close-selected"
-              onClick={closeSelectedTabs}
-              aria-label={`Close ${selectedTabs.size} selected tabs`}
-            >
-              Close {selectedTabs.size} Selected
-            </button>
+            <>
+              <button
+                class="btn-bulk-action"
+                onClick={bulkPin}
+                aria-label={`Pin ${selectedTabs.size} selected tabs`}
+              >
+                📌 Pin
+              </button>
+              <button
+                class="btn-bulk-action"
+                onClick={bulkUnpin}
+                aria-label={`Unpin ${selectedTabs.size} selected tabs`}
+              >
+                📌̸ Unpin
+              </button>
+              <button
+                class="btn-bulk-action"
+                onClick={moveToNewWindow}
+                aria-label={`Move ${selectedTabs.size} selected tabs to new window`}
+              >
+                🪟 Move to Window
+              </button>
+              <button
+                class="btn-close-selected"
+                onClick={closeSelectedTabs}
+                aria-label={`Close ${selectedTabs.size} selected tabs`}
+              >
+                Close {selectedTabs.size} Selected
+              </button>
+            </>
           )}
+          <button
+            class="btn-close-duplicates"
+            onClick={closeDuplicates}
+            aria-label="Close duplicate tabs"
+          >
+            Close Duplicates
+          </button>
         </div>
         <div class="footer-right">
           <div class="filter-controls">

@@ -56,7 +56,9 @@ body {
 }
 
 .app {
-  width: 800px;
+  /* width set dynamically via style attribute */
+  min-width: 600px;
+  max-width: 1200px;
   height: 600px;
   display: flex;
   flex-direction: column;
@@ -687,6 +689,61 @@ td {
   font-size: 11px;
   color: var(--text-muted);
   font-family: var(--font-mono);
+}
+
+.width-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.btn-width {
+  padding: var(--spacing-xs) var(--spacing-md);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  color: var(--text-secondary);
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: var(--font-ui);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  min-width: 28px;
+}
+
+.btn-width:hover {
+  background: var(--hover-bg);
+  border-color: var(--text-muted);
+}
+
+.btn-width.active {
+  background: var(--status-active);
+  border-color: var(--status-active);
+  color: var(--bg-primary);
+}
+
+.btn-group-toggle {
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  color: var(--text-secondary);
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1;
+}
+
+.btn-group-toggle:hover {
+  background: var(--hover-bg);
+  border-color: var(--text-muted);
+}
+
+.btn-group-toggle.active {
+  background: var(--status-active);
+  border-color: var(--status-active);
+  color: var(--bg-primary);
 }
 
 /* Undo Toast */

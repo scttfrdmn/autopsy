@@ -16,9 +16,17 @@ export function App() {
   const [recentlyClosed, setRecentlyClosed] = useState<chrome.tabs.Tab[]>([]);
   const [showUndoToast, setShowUndoToast] = useState(false);
   const [groupByDomain, setGroupByDomain] = useState(false);
-  const [collapsedDomains, setCollapsedDomains] = useState<Set<string>>(new Set());
+  // const [collapsedDomains, setCollapsedDomains] = useState<Set<string>>(new Set()); // WIP
+  const [popupWidth, setPopupWidth] = useState(800);
 
   useEffect(() => {
+    // Load saved width preference
+    chrome.storage.local.get(['popupWidth']).then(result => {
+      if (result.popupWidth) {
+        setPopupWidth(result.popupWidth);
+      }
+    });
+
     loadTabData();
 
     // Auto-refresh every 10 seconds
@@ -210,32 +218,32 @@ export function App() {
     return sortDirection === 'asc' ? comparison : -comparison;
   });
 
-  // Group tabs by domain if enabled
-  const groupedTabs = groupByDomain
-    ? sortedTabs.reduce((groups, tab) => {
-        const domain = new URL(tab.url).hostname;
-        if (!groups[domain]) {
-          groups[domain] = [];
-        }
-        groups[domain].push(tab);
-        return groups;
-      }, {} as Record<string, TabMetrics[]>)
-    : {};
+  // Group tabs by domain if enabled (WIP - rendering not implemented yet)
+  // const groupedTabs = groupByDomain
+  //   ? sortedTabs.reduce((groups, tab) => {
+  //       const domain = new URL(tab.url).hostname;
+  //       if (!groups[domain]) {
+  //         groups[domain] = [];
+  //       }
+  //       groups[domain].push(tab);
+  //       return groups;
+  //     }, {} as Record<string, TabMetrics[]>)
+  //   : {};
 
-  const domainGroups = Object.entries(groupedTabs).sort(([domainA, tabsA], [domainB, tabsB]) => {
-    // Sort by tab count (descending)
-    return tabsB.length - tabsA.length;
-  });
+  // const domainGroups = Object.entries(groupedTabs).sort(([domainA, tabsA], [domainB, tabsB]) => {
+  //   // Sort by tab count (descending)
+  //   return tabsB.length - tabsA.length;
+  // });
 
-  const toggleDomain = (domain: string) => {
-    const newCollapsed = new Set(collapsedDomains);
-    if (newCollapsed.has(domain)) {
-      newCollapsed.delete(domain);
-    } else {
-      newCollapsed.add(domain);
-    }
-    setCollapsedDomains(newCollapsed);
-  };
+  // const toggleDomain = (domain: string) => {
+  //   const newCollapsed = new Set(collapsedDomains);
+  //   if (newCollapsed.has(domain)) {
+  //     newCollapsed.delete(domain);
+  //   } else {
+  //     newCollapsed.add(domain);
+  //   }
+  //   setCollapsedDomains(newCollapsed);
+  // };
 
   const formatBytes = (bytes: number | null): string => {
     if (!bytes) return '—';
@@ -371,8 +379,13 @@ export function App() {
 
   const deadTabs = sortedTabs.filter(t => getActivityStatus(t) === 'dead').length;
 
+  const saveWidth = async (width: number) => {
+    setPopupWidth(width);
+    await chrome.storage.local.set({ popupWidth: width });
+  };
+
   return (
-    <div class="app" role="main">
+    <div class="app" role="main" style={`width: ${popupWidth}px`}>
       <header class="header" role="banner">
         <div class="header-content">
           <h1>
@@ -636,6 +649,30 @@ export function App() {
             <span class="last-updated">
               Updated {formatTime(Date.now() - lastUpdated)}
             </span>
+          </div>
+          <div class="width-controls">
+            <label class="filter-label">Width:</label>
+            <button
+              class={`btn-width ${popupWidth === 600 ? 'active' : ''}`}
+              onClick={() => saveWidth(600)}
+              aria-label="Set small width"
+            >
+              S
+            </button>
+            <button
+              class={`btn-width ${popupWidth === 800 ? 'active' : ''}`}
+              onClick={() => saveWidth(800)}
+              aria-label="Set medium width"
+            >
+              M
+            </button>
+            <button
+              class={`btn-width ${popupWidth === 1000 ? 'active' : ''}`}
+              onClick={() => saveWidth(1000)}
+              aria-label="Set large width"
+            >
+              L
+            </button>
           </div>
         </div>
       </footer>

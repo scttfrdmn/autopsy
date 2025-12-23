@@ -183,6 +183,17 @@ async function main() {
           const created = now - ageOffset;
           storageData[`tab_${tab.id}_created`] = created;
 
+          // ALSO set instance fingerprint to prevent background worker from overwriting
+          // Fingerprint format: url#windowId#index (matches worker.ts createFingerprint)
+          const fingerprint = `${tab.url}#${tab.windowId}#${tab.index}`;
+          storageData[`instance_${fingerprint}`] = {
+            url: tab.url,
+            windowId: tab.windowId,
+            index: tab.index,
+            created: created,
+            lastSeen: now,
+          };
+
           // Set varied activity
           const activity = activityPatterns[index % activityPatterns.length];
           networkStatsData[tab.id] = {

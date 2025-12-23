@@ -400,11 +400,9 @@ export function App() {
     return mb >= 1 ? `${mb.toFixed(1)} MB` : `${(bytes / 1024).toFixed(0)} KB`;
   };
 
-  const formatTime = (timestamp: number | null): string => {
-    if (!timestamp) return '—';
-    const now = Date.now();
-    const diff = now - timestamp;
-    const minutes = Math.floor(diff / 60000);
+  const formatTime = (duration: number | null): string => {
+    if (!duration) return '—';
+    const minutes = Math.floor(duration / 60000);
     const hours = Math.floor(minutes / 60);
     const days = Math.floor(hours / 24);
 

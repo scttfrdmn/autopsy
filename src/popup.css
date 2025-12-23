@@ -325,6 +325,7 @@ th:hover {
 .col-status {
   width: 40px;
   cursor: default;
+  text-transform: none; /* Override uppercase for Status header */
 }
 
 .col-status:hover {
@@ -787,6 +788,8 @@ td {
   cursor: pointer;
   transition: all 0.15s ease;
   white-space: nowrap;
+  min-width: 160px;
+  text-align: center;
 }
 
 .btn-select-inactive:hover {
@@ -827,6 +830,8 @@ td {
   cursor: pointer;
   transition: all 0.15s ease;
   white-space: nowrap;
+  min-width: 160px;
+  text-align: center;
 }
 
 .btn-close-duplicates:hover {

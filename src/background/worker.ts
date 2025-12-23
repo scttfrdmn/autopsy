@@ -276,4 +276,12 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
     sendResponse({ stats: networkStats });
     return true;
   }
+
+  if (request.action === 'setFakeNetworkStats') {
+    // For screenshot automation: replace network stats with fake data
+    Object.keys(networkStats).forEach(key => delete networkStats[key as unknown as number]);
+    Object.assign(networkStats, request.stats);
+    sendResponse({ success: true });
+    return true;
+  }
 });

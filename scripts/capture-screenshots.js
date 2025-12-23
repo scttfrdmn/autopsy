@@ -245,10 +245,10 @@ async function main() {
     console.log('   ⚠ Could not sort by age, continuing...');
   }
 
-  // Capture the full page at viewport size (1280x800)
-  await popup1.screenshot({
+  // Capture just the extension popup
+  const appElement = await popup1.$('.app');
+  await appElement.screenshot({
     path: join(screenshotsPath, '01-main-interface.png'),
-    fullPage: false
   });
   console.log('   ✓ Saved: 01-main-interface.png');
 
@@ -278,10 +278,10 @@ async function main() {
     console.log('   ⚠ Could not navigate with keyboard, continuing...');
   }
 
-  // Capture the full page at viewport size (1280x800)
-  await popup2.screenshot({
+  // Capture just the extension popup
+  const appElement2 = await popup2.$('.app');
+  await appElement2.screenshot({
     path: join(screenshotsPath, '02-keyboard-navigation.png'),
-    fullPage: false
   });
   console.log('   ✓ Saved: 02-keyboard-navigation.png');
 
@@ -310,10 +310,10 @@ async function main() {
     console.log('   ⚠ Could not open help modal, continuing...');
   }
 
-  // Capture the full page at viewport size (1280x800)
-  await popup3.screenshot({
+  // Capture just the extension popup
+  const appElement3 = await popup3.$('.app');
+  await appElement3.screenshot({
     path: join(screenshotsPath, '03-help-keyboard-shortcuts.png'),
-    fullPage: false
   });
   console.log('   ✓ Saved: 03-help-keyboard-shortcuts.png');
 
@@ -342,10 +342,10 @@ async function main() {
     console.log('   ⚠ Could not activate grouping, continuing...');
   }
 
-  // Capture the full page at viewport size (1280x800)
-  await popup4.screenshot({
+  // Capture just the extension popup
+  const appElement4 = await popup4.$('.app'); await appElement4.screenshot({
     path: join(screenshotsPath, '04-group-by-domain.png'),
-    fullPage: false
+    
   });
   console.log('   ✓ Saved: 04-group-by-domain.png');
 
@@ -378,10 +378,10 @@ async function main() {
     console.log('   ⚠ Could not cycle grouping, continuing...');
   }
 
-  // Capture the full page at viewport size (1280x800)
-  await popup5.screenshot({
+  // Capture just the extension popup
+  const appElement5 = await popup5.$('.app'); await appElement5.screenshot({
     path: join(screenshotsPath, '05-group-by-status.png'),
-    fullPage: false
+    
   });
   console.log('   ✓ Saved: 05-group-by-status.png');
 
@@ -411,10 +411,10 @@ async function main() {
     console.log('   ⚠ Could not select tabs, continuing...');
   }
 
-  // Capture the full page at viewport size (1280x800)
-  await popup6.screenshot({
+  // Capture just the extension popup
+  const appElement6 = await popup6.$('.app'); await appElement6.screenshot({
     path: join(screenshotsPath, '06-bulk-operations.png'),
-    fullPage: false
+    
   });
   console.log('   ✓ Saved: 06-bulk-operations.png');
 
@@ -445,10 +445,10 @@ async function main() {
     console.log('   ⚠ Could not change theme, continuing...');
   }
 
-  // Capture the full page at viewport size (1280x800)
-  await popup7.screenshot({
+  // Capture just the extension popup
+  const appElement7 = await popup7.$('.app'); await appElement7.screenshot({
     path: join(screenshotsPath, '07-light-theme.png'),
-    fullPage: false
+    
   });
   console.log('   ✓ Saved: 07-light-theme.png');
 

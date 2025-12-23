@@ -20,6 +20,7 @@ export function App() {
   const [popupWidth, setPopupWidth] = useState(800);
   const [theme, setTheme] = useState<'dark' | 'light' | 'system'>('system');
   const [showHelp, setShowHelp] = useState(false);
+  const [focusedTabId, setFocusedTabId] = useState<number | null>(null);
 
   useEffect(() => {
     // Load saved preferences
@@ -46,9 +47,54 @@ export function App() {
 
     // Keyboard shortcuts
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Arrow Up/Down - Navigate rows
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        // Don't interfere with input fields
+        if ((e.target as HTMLElement).matches('input, textarea, select')) {
+          return;
+        }
+
+        e.preventDefault();
+        moveFocus(e.key === 'ArrowDown' ? 'down' : 'up');
+        return;
+      }
+
+      // Space - Toggle selection on focused row
+      if (e.key === ' ') {
+        // Don't interfere with input fields or buttons
+        if ((e.target as HTMLElement).matches('input, textarea, select, button')) {
+          return;
+        }
+
+        if (focusedTabId !== null) {
+          e.preventDefault();
+          toggleTabSelection(focusedTabId);
+        }
+        return;
+      }
+
+      // Enter - Activate focused tab
+      if (e.key === 'Enter') {
+        // Don't interfere with input fields or buttons
+        if ((e.target as HTMLElement).matches('input, textarea, select, button')) {
+          return;
+        }
+
+        if (focusedTabId !== null) {
+          e.preventDefault();
+          const tab = tabs.find(t => t.id === focusedTabId);
+          if (tab) {
+            chrome.windows.update(tab.windowId, { focused: true });
+            chrome.tabs.update(tab.id, { active: true });
+          }
+        }
+        return;
+      }
+
       // Cmd/Ctrl+F - Focus search
       if ((e.metaKey || e.ctrlKey) && e.key === 'f') {
         e.preventDefault();
+        setFocusedTabId(null); // Clear row focus when focusing search
         const searchInput = document.querySelector('.search-input') as HTMLInputElement;
         searchInput?.focus();
         return;
@@ -76,9 +122,11 @@ export function App() {
         return;
       }
 
-      // Escape - Clear search or selection
+      // Escape - Clear focus, search, or selection
       if (e.key === 'Escape') {
-        if (searchQuery) {
+        if (focusedTabId !== null) {
+          setFocusedTabId(null);
+        } else if (searchQuery) {
           setSearchQuery('');
         } else if (selectedTabs.size > 0) {
           setSelectedTabs(new Set());
@@ -95,6 +143,21 @@ export function App() {
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [selectedTabs, searchQuery]);
+
+  // Scroll focused row into view whenever it changes
+  useEffect(() => {
+    scrollFocusedIntoView();
+  }, [focusedTabId]);
+
+  // Clear focus if focused tab is no longer visible
+  useEffect(() => {
+    if (focusedTabId !== null) {
+      const visibleIds = getVisibleTabIds();
+      if (!visibleIds.includes(focusedTabId)) {
+        setFocusedTabId(null);
+      }
+    }
+  }, [tabs, sortColumn, sortDirection, groupBy, collapsedGroups, searchQuery, ageFilter, focusedTabId]);
 
   const loadTabData = async () => {
     try {
@@ -521,6 +584,7 @@ export function App() {
       <div class="app loading">
         <div class="spinner"></div>
         <p>Analyzing tabs...</p>
+        <p class="loading-hint">Gathering network activity and metadata</p>
       </div>
     );
   }
@@ -655,20 +719,97 @@ export function App() {
     URL.revokeObjectURL(url);
   };
 
+  /**
+   * Gets the list of currently visible tab IDs in display order
+   * Handles both flat and grouped views
+   */
+  const getVisibleTabIds = (): number[] => {
+    if (groupBy !== 'none') {
+      // Grouped view: flatten and exclude collapsed groups
+      const visibleTabs: number[] = [];
+      sortedGroups.forEach(([groupKey, tabs]) => {
+        if (!collapsedGroups.has(groupKey)) {
+          tabs.forEach(tab => visibleTabs.push(tab.id));
+        }
+      });
+      return visibleTabs;
+    } else {
+      // Flat view: just return sorted tab IDs
+      return sortedTabs.map(t => t.id);
+    }
+  };
+
+  /**
+   * Moves focus to the next or previous visible tab
+   */
+  const moveFocus = (direction: 'up' | 'down') => {
+    const visibleIds = getVisibleTabIds();
+
+    if (visibleIds.length === 0) {
+      setFocusedTabId(null);
+      return;
+    }
+
+    // Initial focus: first or last
+    if (focusedTabId === null) {
+      setFocusedTabId(direction === 'down' ? visibleIds[0] : visibleIds[visibleIds.length - 1]);
+      return;
+    }
+
+    // Find current position
+    const currentIndex = visibleIds.indexOf(focusedTabId);
+
+    if (currentIndex === -1) {
+      // Focused tab not visible anymore, start from beginning/end
+      setFocusedTabId(direction === 'down' ? visibleIds[0] : visibleIds[visibleIds.length - 1]);
+      return;
+    }
+
+    // Move focus
+    if (direction === 'down' && currentIndex < visibleIds.length - 1) {
+      setFocusedTabId(visibleIds[currentIndex + 1]);
+    } else if (direction === 'up' && currentIndex > 0) {
+      setFocusedTabId(visibleIds[currentIndex - 1]);
+    }
+    // Otherwise stay at current position (no wrap)
+  };
+
+  /**
+   * Scrolls the focused row into view
+   */
+  const scrollFocusedIntoView = () => {
+    if (focusedTabId === null) return;
+
+    // Use setTimeout to ensure DOM has updated
+    setTimeout(() => {
+      const focusedRow = document.querySelector(`tr[data-tab-id="${focusedTabId}"]`);
+      if (focusedRow) {
+        focusedRow.scrollIntoView({
+          behavior: 'smooth',
+          block: 'nearest',
+          inline: 'nearest'
+        });
+      }
+    }, 0);
+  };
+
   const renderTabRow = (tab: TabMetrics) => {
     const status = getActivityStatus(tab);
     const age = tab.created ? Date.now() - tab.created : null;
+    const isFocused = focusedTabId === tab.id;
 
     return (
       <tr
         key={tab.id}
-        class={`tab-row ${status} ${tab.isActive ? 'is-active' : ''} ${selectedTabs.has(tab.id) ? 'selected' : ''}`}
+        data-tab-id={tab.id}
+        class={`tab-row ${status} ${tab.isActive ? 'is-active' : ''} ${selectedTabs.has(tab.id) ? 'selected' : ''} ${isFocused ? 'focused' : ''}`}
         onClick={async () => {
           await chrome.windows.update(tab.windowId, { focused: true });
           await chrome.tabs.update(tab.id, { active: true });
         }}
+        tabindex={isFocused ? 0 : -1}
         role="row"
-        aria-label={`${tab.title}, ${status}`}
+        aria-label={`${tab.title}, ${status}${isFocused ? ', focused' : ''}`}
       >
         <td class="col-checkbox" onClick={e => e.stopPropagation()} role="cell">
           <input
@@ -1109,6 +1250,7 @@ export function App() {
           <div class="help-modal" onClick={e => e.stopPropagation()} role="dialog" aria-labelledby="help-title">
             <div class="help-header">
               <h2 id="help-title">Help & Keyboard Shortcuts</h2>
+              <span class="help-escape-hint">Press ESC to close</span>
               <button
                 class="help-close"
                 onClick={() => setShowHelp(false)}
@@ -1121,6 +1263,18 @@ export function App() {
               <section class="help-section">
                 <h3>Keyboard Shortcuts</h3>
                 <ul class="help-list">
+                  <li>
+                    <kbd>↑</kbd> <kbd>↓</kbd> — Navigate between tabs
+                  </li>
+                  <li>
+                    <kbd>Space</kbd> — Toggle selection on focused tab
+                  </li>
+                  <li>
+                    <kbd>Enter</kbd> — Switch to focused tab
+                  </li>
+                  <li>
+                    <kbd>Escape</kbd> — Clear focus/search/selection
+                  </li>
                   <li>
                     <kbd>Cmd/Ctrl+F</kbd> — Focus search
                   </li>

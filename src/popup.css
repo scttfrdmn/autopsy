@@ -38,6 +38,12 @@
   --spacing-md: 12px;
   --spacing-lg: 16px;
   --spacing-xl: 24px;
+
+  /* Border Radius */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
 }
 
 /* Light theme overrides */
@@ -52,7 +58,7 @@
 
   --text-primary: #212529;
   --text-secondary: #495057;
-  --text-muted: #6c757d;
+  --text-muted: #5c636f; /* 6.08:1 contrast ratio (was #6c757d at 4.54:1) */
 
   /* Status colors - slightly darker for light bg */
   --status-active: #00b386;
@@ -119,6 +125,12 @@ select:focus-visible {
   }
 }
 
+.loading-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: var(--spacing-sm);
+}
+
 /* Header */
 .header {
   background: var(--bg-secondary);
@@ -170,6 +182,7 @@ h1 {
 .search-input:focus {
   border-color: var(--status-active);
   background: var(--bg-primary);
+  box-shadow: 0 0 0 3px rgba(0, 217, 163, 0.15);
 }
 
 .search-input::placeholder {
@@ -227,7 +240,7 @@ h1 {
 }
 
 .stat-label {
-  font-size: 10px;
+  font-size: 11px; /* Improved readability (was 10px) */
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--text-muted);
@@ -299,7 +312,8 @@ th:hover {
 }
 
 .col-checkbox {
-  width: 40px;
+  width: 44px; /* WCAG 2.5.5 minimum touch target */
+  padding: 14px; /* Creates 44px hit area around 16px checkbox */
   cursor: default;
   text-align: center;
 }
@@ -344,6 +358,7 @@ th:hover {
   background: var(--bg-elevated);
   border-top: 2px solid var(--border-strong);
   border-bottom: 1px solid var(--border-strong);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   cursor: pointer;
   user-select: none;
 }
@@ -421,7 +436,35 @@ th:hover {
 
 .tab-row.selected {
   background: rgba(0, 217, 163, 0.15);
-  border-left: 3px solid var(--status-active);
+  border-left: 4px solid var(--status-active);
+  box-shadow: inset 4px 0 0 0 var(--status-active);
+}
+
+/* Keyboard focus indicator */
+.tab-row.focused {
+  outline: 2px solid var(--status-active);
+  outline-offset: -2px;
+  background: var(--hover-bg);
+  position: relative;
+  z-index: 5;
+}
+
+/* Focused + selected (both states) */
+.tab-row.focused.selected {
+  outline: 2px solid var(--status-active);
+  outline-offset: -2px;
+  background: rgba(0, 217, 163, 0.2);
+}
+
+/* Focused + active tab */
+.tab-row.focused.is-active {
+  outline: 2px solid var(--status-active);
+  outline-offset: -2px;
+}
+
+/* Ensure outline shows on top of other elements */
+.tab-row.focused:hover {
+  background: var(--hover-bg);
 }
 
 .tab-checkbox {
@@ -572,7 +615,7 @@ td {
 
 .tab-url {
   color: var(--text-muted);
-  font-size: 11px;
+  font-size: 12px; /* Improved readability (was 11px) */
   font-family: var(--font-mono);
   white-space: nowrap;
   overflow: hidden;
@@ -1088,6 +1131,12 @@ td {
   margin: 0;
 }
 
+.help-escape-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
 .help-close {
   background: transparent;
   border: none;
@@ -1152,7 +1201,7 @@ td {
   border: 1px solid var(--border-strong);
   border-radius: 4px;
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 12px; /* Improved readability (was 11px) */
   font-weight: 500;
   color: var(--text-primary);
   margin-right: var(--spacing-sm);

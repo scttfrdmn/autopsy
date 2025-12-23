@@ -18,12 +18,16 @@ export function App() {
   const [groupBy, setGroupBy] = useState<'none' | 'domain' | 'window' | 'status'>('none');
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
   const [popupWidth, setPopupWidth] = useState(800);
+  const [theme, setTheme] = useState<'dark' | 'light' | 'system'>('system');
 
   useEffect(() => {
-    // Load saved width preference
-    chrome.storage.local.get(['popupWidth']).then(result => {
+    // Load saved preferences
+    chrome.storage.local.get(['popupWidth', 'theme']).then(result => {
       if (result.popupWidth) {
         setPopupWidth(result.popupWidth);
+      }
+      if (result.theme) {
+        setTheme(result.theme);
       }
     });
 
@@ -505,6 +509,28 @@ export function App() {
     await chrome.storage.local.set({ popupWidth: width });
   };
 
+  const getEffectiveTheme = (): 'dark' | 'light' => {
+    if (theme === 'system') {
+      return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+    }
+    return theme;
+  };
+
+  const cycleTheme = async () => {
+    const modes: Array<'dark' | 'light' | 'system'> = ['dark', 'light', 'system'];
+    const currentIndex = modes.indexOf(theme);
+    const nextIndex = (currentIndex + 1) % modes.length;
+    const newTheme = modes[nextIndex];
+    setTheme(newTheme);
+    await chrome.storage.local.set({ theme: newTheme });
+  };
+
+  // Apply theme to document
+  useEffect(() => {
+    const effectiveTheme = getEffectiveTheme();
+    document.documentElement.setAttribute('data-theme', effectiveTheme);
+  }, [theme]);
+
   const renderTabRow = (tab: TabMetrics) => {
     const status = getActivityStatus(tab);
     const age = tab.created ? Date.now() - tab.created : null;
@@ -606,6 +632,14 @@ export function App() {
             title={`Group by: ${groupBy} (click to cycle)`}
           >
             {groupBy === 'none' ? '⚏' : groupBy === 'domain' ? '🌐' : groupBy === 'window' ? '🪟' : '📊'}
+          </button>
+          <button
+            class="btn-theme-toggle"
+            onClick={cycleTheme}
+            aria-label={`Cycle theme (current: ${theme})`}
+            title={`Theme: ${theme} (click to cycle)`}
+          >
+            {theme === 'dark' ? '🌙' : theme === 'light' ? '☀️' : '💻'}
           </button>
           <div class="stats" role="status" aria-live="polite">
             <div class="stat">

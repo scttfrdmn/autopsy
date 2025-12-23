@@ -40,6 +40,31 @@
   --spacing-xl: 24px;
 }
 
+/* Light theme overrides */
+[data-theme="light"] {
+  /* Colors - Light Theme */
+  --bg-primary: #f8f9fa;
+  --bg-secondary: #ffffff;
+  --bg-elevated: #f1f3f5;
+
+  --border-subtle: #e9ecef;
+  --border-strong: #dee2e6;
+
+  --text-primary: #212529;
+  --text-secondary: #495057;
+  --text-muted: #6c757d;
+
+  /* Status colors - slightly darker for light bg */
+  --status-active: #00b386;
+  --status-recent: #2d8ce8;
+  --status-idle: #f59f00;
+  --status-dead: #e03131;
+
+  /* UI */
+  --hover-bg: rgba(0, 0, 0, 0.05);
+  --active-bg: rgba(0, 179, 134, 0.1);
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -845,6 +870,24 @@ td {
   background: var(--status-active);
   border-color: var(--status-active);
   color: var(--bg-primary);
+}
+
+.btn-theme-toggle {
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  color: var(--text-secondary);
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1;
+}
+
+.btn-theme-toggle:hover {
+  background: var(--hover-bg);
+  border-color: var(--text-muted);
 }
 
 /* Undo Toast */

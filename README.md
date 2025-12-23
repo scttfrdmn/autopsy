@@ -1,6 +1,6 @@
 # Autopsy
 
-[![Version](https://img.shields.io/badge/version-0.20.0-blue.svg)](https://github.com/scttfrdmn/autopsy/releases)
+[![Version](https://img.shields.io/badge/version-0.21.1-blue.svg)](https://github.com/scttfrdmn/autopsy/releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue.svg)](https://www.typescriptlang.org/)
 [![ESLint](https://img.shields.io/badge/ESLint-passing-brightgreen.svg)](eslint.config.js)
@@ -49,6 +49,25 @@ Identify resource-heavy tabs and processes
 
 ---
 
+## ⌨️ Keyboard Navigation
+
+**Full keyboard support for power users**
+- **Arrow Up/Down** — Navigate between tab rows
+- **Space** — Toggle selection on focused row
+- **Enter** — Activate/switch to focused tab
+- **Escape** — Clear focus, then search, then selection
+- **Cmd/Ctrl+F** — Focus search input
+- **Cmd/Ctrl+A** — Select all visible tabs
+- **Delete/Backspace** — Close selected tabs
+- **?** — Open help modal with all shortcuts
+
+**Accessible design**
+- Focus indicators meet WCAG 2.1 AA standards
+- Works seamlessly in flat and grouped views
+- No keyboard traps, fully navigable
+
+---
+
 ## 📁 Data Export
 
 - **CSV export** — Export to spreadsheet for analysis
@@ -81,18 +100,31 @@ Identify resource-heavy tabs and processes
 
 ### Main Interface
 ![Main Interface](screenshots/01-main-interface.png)
+*Real-time status tracking with smart indicators and comprehensive metrics*
+
+### Keyboard Navigation
+![Keyboard Navigation](screenshots/02-keyboard-navigation.png)
+*Navigate with arrow keys, select with Space, activate with Enter*
+
+### Keyboard Shortcuts Help
+![Help Modal](screenshots/03-help-keyboard-shortcuts.png)
+*Built-in help modal with all keyboard shortcuts*
 
 ### Domain Grouping
-![Group by Domain](screenshots/02-group-by-domain.png)
+![Group by Domain](screenshots/04-group-by-domain.png)
+*Organize tabs by website with collapsible groups*
 
 ### Status Grouping
-![Group by Status](screenshots/03-group-by-status.png)
+![Group by Status](screenshots/05-group-by-status.png)
+*Group by activity level (Active, Recent, Idle, Inactive)*
 
 ### Bulk Operations
-![Bulk Operations](screenshots/04-bulk-operations.png)
+![Bulk Operations](screenshots/06-bulk-operations.png)
+*Select multiple tabs and perform actions in bulk*
 
 ### Light Theme
-![Light Theme](screenshots/05-light-theme.png)
+![Light Theme](screenshots/07-light-theme.png)
+*WCAG AA compliant light theme with improved contrast*
 
 </details>
 
@@ -101,7 +133,9 @@ Identify resource-heavy tabs and processes
 ## 🚀 Installation
 
 ### Chrome Web Store
-*Coming soon! Currently under review.*
+**[Install from Chrome Web Store →](https://chromewebstore.google.com/detail/autopsy/mmcbbcemljflnhgkfenmpcidehmaoihk)**
+
+*v0.21.1 update currently under review with improved screenshots and bug fixes.*
 
 ### Development Mode
 

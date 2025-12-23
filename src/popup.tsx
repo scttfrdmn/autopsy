@@ -19,6 +19,7 @@ export function App() {
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
   const [popupWidth, setPopupWidth] = useState(800);
   const [theme, setTheme] = useState<'dark' | 'light' | 'system'>('system');
+  const [showHelp, setShowHelp] = useState(false);
 
   useEffect(() => {
     // Load saved preferences
@@ -260,9 +261,9 @@ export function App() {
       : {};
 
   const sortedGroups = Object.entries(groupedTabs).sort(([keyA, tabsA], [keyB, tabsB]) => {
-    // For status grouping, sort by priority: active > recent > idle > dead
+    // For status grouping, sort by priority: active > recent > idle > inactive
     if (groupBy === 'status') {
-      const statusOrder = { active: 0, recent: 1, idle: 2, dead: 3 };
+      const statusOrder = { active: 0, recent: 1, idle: 2, inactive: 3 };
       return (
         statusOrder[keyA as keyof typeof statusOrder] -
         statusOrder[keyB as keyof typeof statusOrder]
@@ -313,7 +314,7 @@ export function App() {
         active: 'Active (<10s)',
         recent: 'Recent (<5m)',
         idle: 'Idle (<1h)',
-        dead: 'Dead (>1h)',
+        inactive: 'Inactive (>1h)',
       };
       return statusLabels[groupKey as keyof typeof statusLabels] || groupKey;
     }
@@ -351,17 +352,17 @@ export function App() {
     });
   };
 
-  const getActivityStatus = (tab: TabMetrics): 'active' | 'recent' | 'idle' | 'dead' => {
+  const getActivityStatus = (tab: TabMetrics): 'active' | 'recent' | 'idle' | 'inactive' => {
     const now = Date.now();
     const lastNet = tab.networkActivity.lastActivity;
 
-    if (!lastNet) return 'dead';
+    if (!lastNet) return 'inactive';
 
     const diff = now - lastNet;
     if (diff < 10000) return 'active'; // < 10 sec
     if (diff < 300000) return 'recent'; // < 5 min
     if (diff < 3600000) return 'idle'; // < 1 hour
-    return 'dead';
+    return 'inactive';
   };
 
   const closeFilteredTabs = async () => {
@@ -462,9 +463,9 @@ export function App() {
     setSelectedTabs(newSelected);
   };
 
-  const selectAllDeadTabs = () => {
-    const deadTabIds = sortedTabs.filter(t => getActivityStatus(t) === 'dead').map(t => t.id);
-    setSelectedTabs(new Set(deadTabIds));
+  const selectAllInactiveTabs = () => {
+    const inactiveTabIds = sortedTabs.filter(t => getActivityStatus(t) === 'inactive').map(t => t.id);
+    setSelectedTabs(new Set(inactiveTabIds));
   };
 
   const toggleSelectAll = () => {
@@ -524,7 +525,7 @@ export function App() {
     );
   }
 
-  const deadTabs = sortedTabs.filter(t => getActivityStatus(t) === 'dead').length;
+  const inactiveTabs = sortedTabs.filter(t => getActivityStatus(t) === 'inactive').length;
 
   const saveWidth = async (width: number) => {
     setPopupWidth(width);
@@ -682,7 +683,15 @@ export function App() {
           <div
             class={`status-indicator ${status}`}
             role="img"
-            aria-label={`Status: ${status}`}
+            aria-label={
+              status === 'active'
+                ? 'Active: recent network activity (< 10 seconds)'
+                : status === 'recent'
+                  ? 'Recent: some activity (< 5 minutes)'
+                  : status === 'idle'
+                    ? 'Idle: no recent activity (< 1 hour)'
+                    : 'Inactive: no activity for over 1 hour'
+            }
             title={status}
           ></div>
         </td>
@@ -768,17 +777,30 @@ export function App() {
           >
             {theme === 'dark' ? '🌙' : theme === 'light' ? '☀️' : '💻'}
           </button>
+          <button
+            class="btn-help"
+            onClick={() => setShowHelp(true)}
+            aria-label="Show help and keyboard shortcuts"
+            title="Help & Keyboard Shortcuts"
+          >
+            ?
+          </button>
           <div class="stats" role="status" aria-live="polite">
             <div class="stat">
               <span class="stat-value">{sortedTabs.length}</span>
               <span class="stat-label">{ageFilter > 0 || searchQuery ? 'filtered' : 'tabs'}</span>
             </div>
             <div class="stat warning">
-              <span class="stat-value">{deadTabs}</span>
-              <span class="stat-label">dead</span>
+              <span class="stat-value">{inactiveTabs}</span>
+              <span class="stat-label">inactive</span>
             </div>
           </div>
         </div>
+        {(searchQuery || ageFilter > 0) && sortedTabs.length < tabs.length && (
+          <div class="filter-feedback" role="status" aria-live="polite">
+            Showing {sortedTabs.length} of {tabs.length} tabs
+          </div>
+        )}
       </header>
 
       <div class="table-container" role="region" aria-label="Tab list">
@@ -797,21 +819,37 @@ export function App() {
               </th>
               <th
                 class="col-status"
-                title="Status indicator: circle=active, diamond=recent, square=idle, x=dead"
+                title="Status indicator: circle=active, diamond=recent, square=idle, x=inactive"
               >
                 <span aria-label="Status">?</span>
               </th>
-              <th class="col-title" onClick={() => handleSort('title')}>
+              <th
+                class="col-title"
+                onClick={() => handleSort('title')}
+                title="Tab title and domain - click to sort"
+              >
                 Tab {sortColumn === 'title' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
-              <th class="col-time" onClick={() => handleSort('created')}>
+              <th
+                class="col-time"
+                onClick={() => handleSort('created')}
+                title="Time since tab was opened (persists across browser restarts)"
+              >
                 Tab Age {sortColumn === 'created' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
-              <th class="col-timestamp" onClick={() => handleSort('networkActivity')}>
+              <th
+                class="col-timestamp"
+                onClick={() => handleSort('networkActivity')}
+                title="Time since last network request - indicates tab activity"
+              >
                 Last Activity{' '}
                 {sortColumn === 'networkActivity' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
-              <th class="col-number" onClick={() => handleSort('requestCount')}>
+              <th
+                class="col-number"
+                onClick={() => handleSort('requestCount')}
+                title="Total network requests - high values may indicate background activity"
+              >
                 Requests {sortColumn === 'requestCount' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
               <th
@@ -884,19 +922,19 @@ export function App() {
           <span>■ Idle (&lt;1h)</span>
         </div>
         <div class="legend-item">
-          <div class="status-indicator dead"></div>
-          <span>✕ Dead (&gt;1h)</span>
+          <div class="status-indicator inactive"></div>
+          <span>✕ Inactive (&gt;1h)</span>
         </div>
       </div>
 
       <footer class="footer" role="contentinfo">
         <div class="footer-left">
           <button
-            class="btn-select-dead"
-            onClick={selectAllDeadTabs}
-            aria-label="Select all dead tabs"
+            class="btn-select-inactive"
+            onClick={selectAllInactiveTabs}
+            aria-label="Select all inactive tabs"
           >
-            Select All Dead
+            Select Inactive Tabs ({inactiveTabs})
           </button>
           {selectedTabs.size > 0 && (
             <>
@@ -1063,6 +1101,59 @@ export function App() {
           >
             Undo
           </button>
+        </div>
+      )}
+
+      {showHelp && (
+        <div class="help-overlay" onClick={() => setShowHelp(false)}>
+          <div class="help-modal" onClick={e => e.stopPropagation()} role="dialog" aria-labelledby="help-title">
+            <div class="help-header">
+              <h2 id="help-title">Help & Keyboard Shortcuts</h2>
+              <button
+                class="help-close"
+                onClick={() => setShowHelp(false)}
+                aria-label="Close help"
+              >
+                ×
+              </button>
+            </div>
+            <div class="help-content">
+              <section class="help-section">
+                <h3>Keyboard Shortcuts</h3>
+                <ul class="help-list">
+                  <li>
+                    <kbd>Cmd/Ctrl+F</kbd> — Focus search
+                  </li>
+                  <li>
+                    <kbd>Cmd/Ctrl+A</kbd> — Select all tabs
+                  </li>
+                  <li>
+                    <kbd>Delete/Backspace</kbd> — Close selected tabs
+                  </li>
+                </ul>
+              </section>
+
+              <section class="help-section">
+                <h3>Status Indicators</h3>
+                <ul class="help-list">
+                  <li>● <strong>Active</strong> — Recent network activity (&lt; 10 seconds)</li>
+                  <li>◆ <strong>Recent</strong> — Some activity (&lt; 5 minutes)</li>
+                  <li>■ <strong>Idle</strong> — No recent activity (&lt; 1 hour)</li>
+                  <li>✕ <strong>Inactive</strong> — No activity for over 1 hour</li>
+                </ul>
+              </section>
+
+              <section class="help-section">
+                <h3>Features</h3>
+                <ul class="help-list">
+                  <li><strong>Grouping</strong> — Click ⚏ to group by domain, window, or status</li>
+                  <li><strong>Sorting</strong> — Click column headers to sort</li>
+                  <li><strong>Bulk Actions</strong> — Select tabs to pin, unpin, or move to new window</li>
+                  <li><strong>Export</strong> — Export tab data to CSV or JSON</li>
+                </ul>
+              </section>
+            </div>
+          </div>
         </div>
       )}
     </div>

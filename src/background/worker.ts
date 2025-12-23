@@ -66,7 +66,7 @@ const initializeTabAges = async () => {
     if (!tab.id || !tab.url) continue;
 
     const fingerprint = createFingerprint(tab.url, tab.windowId, tab.index);
-    let tabAge = now;
+    let tabAge = now; // Default to now - tab age starts when Autopsy first sees it
 
     // Try to find matching instance by fingerprint
     const instanceKey = `instance_${fingerprint}`;
@@ -80,14 +80,21 @@ const initializeTabAges = async () => {
       });
     } else {
       // Try to find similar instance (same URL, different position)
+      // Only match instances that were recently seen (within last 5 minutes)
       let bestMatch: TabInstance | null = null;
       let bestMatchAge = now;
+      const fiveMinutesAgo = now - 5 * 60 * 1000;
 
       for (const key in storage) {
         if (key.startsWith('instance_') && key.includes(tab.url)) {
           const instance = storage[key] as TabInstance;
-          if (instance.url === tab.url && instance.windowId === tab.windowId) {
-            // Found a tab with same URL in same window - likely repositioned
+          // Only match recent instances to avoid using very old historical data
+          if (
+            instance.url === tab.url &&
+            instance.windowId === tab.windowId &&
+            instance.lastSeen > fiveMinutesAgo
+          ) {
+            // Found a tab with same URL in same window that was recently active
             if (instance.created < bestMatchAge) {
               bestMatch = instance;
               bestMatchAge = instance.created;
@@ -98,13 +105,8 @@ const initializeTabAges = async () => {
 
       if (bestMatch) {
         tabAge = bestMatch.created;
-      } else {
-        // Fall back to URL first-seen
-        const urlKey = `url_${tab.url}_first_seen`;
-        if (storage[urlKey]) {
-          tabAge = storage[urlKey];
-        }
       }
+      // Note: Removed URL first-seen fallback to avoid very old historical ages
 
       // Create new instance for this tab
       chrome.storage.local.set({

@@ -15,6 +15,8 @@ export function App() {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [recentlyClosed, setRecentlyClosed] = useState<chrome.tabs.Tab[]>([]);
   const [showUndoToast, setShowUndoToast] = useState(false);
+  const [groupByDomain, setGroupByDomain] = useState(false);
+  const [collapsedDomains, setCollapsedDomains] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     loadTabData();
@@ -80,11 +82,15 @@ export function App() {
     try {
       // Get all tabs
       const allTabs = await chrome.tabs.query({});
-      
+
+      // Get tab groups
+      const tabGroups = await chrome.tabGroups.query({});
+      const groupMap = new Map(tabGroups.map(g => [g.id, g]));
+
       // Get network stats from background worker
       const response = await chrome.runtime.sendMessage({ action: 'getNetworkStats' });
       const networkStats: NetworkStats = response.stats || {};
-      
+
       // Get stored creation times
       const storage = await chrome.storage.local.get(null);
 
@@ -101,6 +107,11 @@ export function App() {
           firstActivity: null
         };
         
+        // Get tab group info
+        const group = tab.groupId !== chrome.tabGroups.TAB_GROUP_ID_NONE && groupMap.get(tab.groupId)
+          ? groupMap.get(tab.groupId)!
+          : null;
+
         return {
           id: tab.id!,
           title: tab.title || 'Untitled',
@@ -114,7 +125,12 @@ export function App() {
           isActive: tab.active || false,
           isPinned: tab.pinned || false,
           isAudible: tab.audible || false,
-          isDiscarded: tab.discarded || false
+          isDiscarded: tab.discarded || false,
+          groupInfo: group ? {
+            id: group.id,
+            title: group.title,
+            color: group.color
+          } : null
         };
       });
       
@@ -193,6 +209,33 @@ export function App() {
     const comparison = aVal > bVal ? 1 : aVal < bVal ? -1 : 0;
     return sortDirection === 'asc' ? comparison : -comparison;
   });
+
+  // Group tabs by domain if enabled
+  const groupedTabs = groupByDomain
+    ? sortedTabs.reduce((groups, tab) => {
+        const domain = new URL(tab.url).hostname;
+        if (!groups[domain]) {
+          groups[domain] = [];
+        }
+        groups[domain].push(tab);
+        return groups;
+      }, {} as Record<string, TabMetrics[]>)
+    : {};
+
+  const domainGroups = Object.entries(groupedTabs).sort(([domainA, tabsA], [domainB, tabsB]) => {
+    // Sort by tab count (descending)
+    return tabsB.length - tabsA.length;
+  });
+
+  const toggleDomain = (domain: string) => {
+    const newCollapsed = new Set(collapsedDomains);
+    if (newCollapsed.has(domain)) {
+      newCollapsed.delete(domain);
+    } else {
+      newCollapsed.add(domain);
+    }
+    setCollapsedDomains(newCollapsed);
+  };
 
   const formatBytes = (bytes: number | null): string => {
     if (!bytes) return '—';
@@ -355,6 +398,14 @@ export function App() {
               </button>
             )}
           </div>
+          <button
+            class={`btn-group-toggle ${groupByDomain ? 'active' : ''}`}
+            onClick={() => setGroupByDomain(!groupByDomain)}
+            aria-label={groupByDomain ? 'Disable domain grouping' : 'Enable domain grouping'}
+            title={groupByDomain ? 'Disable domain grouping' : 'Group tabs by domain'}
+          >
+            ⚏
+          </button>
           <div class="stats" role="status" aria-live="polite">
             <div class="stat">
               <span class="stat-value">{sortedTabs.length}</span>
@@ -447,6 +498,13 @@ export function App() {
                       {tab.favIconUrl && <img src={tab.favIconUrl} class="favicon" alt="" />}
                       <div class="tab-text">
                         <div class="tab-title">
+                          {tab.groupInfo && (
+                            <span
+                              class={`group-indicator group-${tab.groupInfo.color}`}
+                              title={tab.groupInfo.title || `Group (${tab.groupInfo.color})`}
+                              aria-label={`Tab group: ${tab.groupInfo.title || tab.groupInfo.color}`}
+                            ></span>
+                          )}
                           {tab.title}
                           {tab.isDiscarded && (
                             <span class="suspended-badge" title="Tab suspended by Chrome to save memory">

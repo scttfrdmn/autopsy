@@ -5,6 +5,7 @@
   "description": "Surgical precision tab analysis - find what to close",
   "permissions": [
     "tabs",
+    "tabGroups",
     "processes",
     "storage",
     "webRequest"

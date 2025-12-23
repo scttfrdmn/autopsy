@@ -25,6 +25,13 @@ export interface TabMetrics {
   isPinned: boolean;
   isAudible: boolean;
   isDiscarded: boolean;
+
+  // Tab group
+  groupInfo: {
+    id: number;
+    title?: string;
+    color: string;
+  } | null;
 }
 
 export interface WindowInfo {

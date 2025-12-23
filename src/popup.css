@@ -422,6 +422,25 @@ td {
   gap: var(--spacing-sm);
 }
 
+.group-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+/* Chrome tab group colors */
+.group-grey { background: #5f6368; }
+.group-blue { background: #4285f4; }
+.group-red { background: #ea4335; }
+.group-yellow { background: #fbbc04; }
+.group-green { background: #34a853; }
+.group-pink { background: #ff6d00; }
+.group-purple { background: #9334e6; }
+.group-cyan { background: #00bcd4; }
+.group-orange { background: #ff9800; }
+
 .suspended-badge {
   font-size: 14px;
   opacity: 0.7;

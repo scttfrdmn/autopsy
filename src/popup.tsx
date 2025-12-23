@@ -15,8 +15,8 @@ export function App() {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [recentlyClosed, setRecentlyClosed] = useState<chrome.tabs.Tab[]>([]);
   const [showUndoToast, setShowUndoToast] = useState(false);
-  const [groupByDomain, setGroupByDomain] = useState(false);
-  const [collapsedDomains, setCollapsedDomains] = useState<Set<string>>(new Set());
+  const [groupBy, setGroupBy] = useState<'none' | 'domain' | 'window' | 'status'>('none');
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
   const [popupWidth, setPopupWidth] = useState(800);
 
   useEffect(() => {
@@ -218,36 +218,80 @@ export function App() {
     return sortDirection === 'asc' ? comparison : -comparison;
   });
 
-  // Group tabs by domain if enabled
-  const groupedTabs = groupByDomain
+  // Group tabs based on groupBy mode
+  const groupedTabs = groupBy !== 'none'
     ? sortedTabs.reduce((groups, tab) => {
-        const domain = new URL(tab.url).hostname;
-        if (!groups[domain]) {
-          groups[domain] = [];
+        let groupKey: string;
+
+        if (groupBy === 'domain') {
+          groupKey = new URL(tab.url).hostname;
+        } else if (groupBy === 'window') {
+          groupKey = `window-${tab.windowId}`;
+        } else if (groupBy === 'status') {
+          groupKey = getActivityStatus(tab);
+        } else {
+          groupKey = 'other';
         }
-        groups[domain].push(tab);
+
+        if (!groups[groupKey]) {
+          groups[groupKey] = [];
+        }
+        groups[groupKey].push(tab);
         return groups;
       }, {} as Record<string, TabMetrics[]>)
     : {};
 
-  const domainGroups = Object.entries(groupedTabs).sort(([, tabsA], [, tabsB]) => {
-    // Sort by tab count (descending)
+  const sortedGroups = Object.entries(groupedTabs).sort(([keyA, tabsA], [keyB, tabsB]) => {
+    // For status grouping, sort by priority: active > recent > idle > dead
+    if (groupBy === 'status') {
+      const statusOrder = { active: 0, recent: 1, idle: 2, dead: 3 };
+      return statusOrder[keyA as keyof typeof statusOrder] - statusOrder[keyB as keyof typeof statusOrder];
+    }
+    // For other grouping modes, sort by tab count (descending)
     return tabsB.length - tabsA.length;
   });
 
-  const toggleDomain = (domain: string) => {
-    const newCollapsed = new Set(collapsedDomains);
-    if (newCollapsed.has(domain)) {
-      newCollapsed.delete(domain);
+  const toggleGroup = (groupKey: string) => {
+    const newCollapsed = new Set(collapsedGroups);
+    if (newCollapsed.has(groupKey)) {
+      newCollapsed.delete(groupKey);
     } else {
-      newCollapsed.add(domain);
+      newCollapsed.add(groupKey);
     }
-    setCollapsedDomains(newCollapsed);
+    setCollapsedGroups(newCollapsed);
   };
 
-  const selectDomain = (domain: string) => {
-    const domainTabs = tabs.filter(t => new URL(t.url).hostname === domain);
-    setSelectedTabs(new Set(domainTabs.map(t => t.id)));
+  const selectGroup = (groupKey: string) => {
+    const groupTabs = groupedTabs[groupKey] || [];
+    setSelectedTabs(new Set(groupTabs.map(t => t.id)));
+  };
+
+  const cycleGroupMode = () => {
+    const modes: Array<'none' | 'domain' | 'window' | 'status'> = ['none', 'domain', 'window', 'status'];
+    const currentIndex = modes.indexOf(groupBy);
+    const nextIndex = (currentIndex + 1) % modes.length;
+    setGroupBy(modes[nextIndex]);
+    setCollapsedGroups(new Set()); // Clear collapsed state when changing mode
+  };
+
+  const getGroupLabel = (groupKey: string): string => {
+    if (groupBy === 'domain') {
+      return groupKey;
+    } else if (groupBy === 'window') {
+      const windowId = parseInt(groupKey.replace('window-', ''));
+      const windowTabs = sortedTabs.filter(t => t.windowId === windowId);
+      const focused = windowTabs.some(t => t.isActive);
+      return `Window ${windowId}${focused ? ' (Current)' : ''}`;
+    } else if (groupBy === 'status') {
+      const statusLabels = {
+        active: 'Active (<10s)',
+        recent: 'Recent (<5m)',
+        idle: 'Idle (<1h)',
+        dead: 'Dead (>1h)'
+      };
+      return statusLabels[groupKey as keyof typeof statusLabels] || groupKey;
+    }
+    return groupKey;
   };
 
   const formatBytes = (bytes: number | null): string => {
@@ -556,12 +600,12 @@ export function App() {
             )}
           </div>
           <button
-            class={`btn-group-toggle ${groupByDomain ? 'active' : ''}`}
-            onClick={() => setGroupByDomain(!groupByDomain)}
-            aria-label={groupByDomain ? 'Disable domain grouping' : 'Enable domain grouping'}
-            title={groupByDomain ? 'Disable domain grouping' : 'Group tabs by domain'}
+            class={`btn-group-toggle ${groupBy !== 'none' ? 'active' : ''}`}
+            onClick={cycleGroupMode}
+            aria-label={`Cycle grouping mode (current: ${groupBy})`}
+            title={`Group by: ${groupBy} (click to cycle)`}
           >
-            ⚏
+            {groupBy === 'none' ? '⚏' : groupBy === 'domain' ? '🌐' : groupBy === 'window' ? '🪟' : '📊'}
           </button>
           <div class="stats" role="status" aria-live="polite">
             <div class="stat">
@@ -617,24 +661,25 @@ export function App() {
                   {ageFilter > 0 ? 'No tabs match this age filter' : 'No tabs open'}
                 </td>
               </tr>
-            ) : groupByDomain ? (
+            ) : groupBy !== 'none' ? (
               // Grouped view
-              domainGroups.map(([domain, tabs]) => {
-                const isCollapsed = collapsedDomains.has(domain);
+              sortedGroups.map(([groupKey, tabs]) => {
+                const isCollapsed = collapsedGroups.has(groupKey);
+                const groupLabel = getGroupLabel(groupKey);
                 return (
                   <>
-                    <tr class="domain-header" key={`domain-${domain}`}>
-                      <td colSpan={7} onClick={() => toggleDomain(domain)} class="domain-header-cell">
-                        <span class="domain-toggle">{isCollapsed ? '▸' : '▾'}</span>
-                        <span class="domain-name">{domain}</span>
-                        <span class="domain-count">({tabs.length})</span>
+                    <tr class="group-header" key={`group-${groupKey}`}>
+                      <td colSpan={7} onClick={() => toggleGroup(groupKey)} class="group-header-cell">
+                        <span class="group-toggle">{isCollapsed ? '▸' : '▾'}</span>
+                        <span class="group-name">{groupLabel}</span>
+                        <span class="group-count">({tabs.length})</span>
                         <button
-                          class="btn-select-domain"
+                          class="btn-select-group"
                           onClick={(e) => {
                             e.stopPropagation();
-                            selectDomain(domain);
+                            selectGroup(groupKey);
                           }}
-                          aria-label={`Select all ${tabs.length} tabs from ${domain}`}
+                          aria-label={`Select all ${tabs.length} tabs from ${groupLabel}`}
                         >
                           Select All
                         </button>

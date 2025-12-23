@@ -297,8 +297,8 @@ th:hover {
 }
 
 
-/* Domain grouping */
-.domain-header {
+/* Group headers (domain, window, status) */
+.group-header {
   background: var(--bg-elevated);
   border-top: 2px solid var(--border-strong);
   border-bottom: 1px solid var(--border-strong);
@@ -306,11 +306,11 @@ th:hover {
   user-select: none;
 }
 
-.domain-header:hover {
+.group-header:hover {
   background: var(--hover-bg);
 }
 
-.domain-header-cell {
+.group-header-cell {
   padding: var(--spacing-md) !important;
   font-weight: 600;
   color: var(--text-primary);
@@ -319,25 +319,25 @@ th:hover {
   gap: var(--spacing-sm);
 }
 
-.domain-toggle {
+.group-toggle {
   color: var(--text-secondary);
   font-size: 12px;
   width: 12px;
   display: inline-block;
 }
 
-.domain-name {
+.group-name {
   font-family: var(--font-mono);
   font-size: 13px;
 }
 
-.domain-count {
+.group-count {
   color: var(--text-muted);
   font-size: 12px;
   font-weight: 500;
 }
 
-.btn-select-domain {
+.btn-select-group {
   padding: 4px 10px;
   margin-left: auto;
   background: var(--bg-elevated);
@@ -352,7 +352,7 @@ th:hover {
   white-space: nowrap;
 }
 
-.btn-select-domain:hover {
+.btn-select-group:hover {
   background: rgba(0, 217, 163, 0.1);
   border-color: #00edb5;
   color: #00edb5;

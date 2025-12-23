@@ -24,6 +24,7 @@ export interface TabMetrics {
   isActive: boolean;
   isPinned: boolean;
   isAudible: boolean;
+  isDiscarded: boolean;
 }
 
 export interface WindowInfo {

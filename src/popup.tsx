@@ -113,7 +113,8 @@ export function App() {
           memoryUsage: null,
           isActive: tab.active || false,
           isPinned: tab.pinned || false,
-          isAudible: tab.audible || false
+          isAudible: tab.audible || false,
+          isDiscarded: tab.discarded || false
         };
       });
       
@@ -328,28 +329,33 @@ export function App() {
   const deadTabs = sortedTabs.filter(t => getActivityStatus(t) === 'dead').length;
 
   return (
-    <div class="app">
-      <header class="header">
+    <div class="app" role="main">
+      <header class="header" role="banner">
         <div class="header-content">
           <h1>
-            <span class="logo">⚕</span>
+            <span class="logo" aria-hidden="true">⚕</span>
             Autopsy
           </h1>
-          <div class="search-box">
+          <div class="search-box" role="search">
             <input
               type="text"
               class="search-input"
               placeholder="Search tabs..."
               value={searchQuery}
               onInput={(e) => setSearchQuery((e.target as HTMLInputElement).value)}
+              aria-label="Search tabs by title or URL"
             />
             {searchQuery && (
-              <button class="search-clear" onClick={() => setSearchQuery('')}>
+              <button
+                class="search-clear"
+                onClick={() => setSearchQuery('')}
+                aria-label="Clear search"
+              >
                 ×
               </button>
             )}
           </div>
-          <div class="stats">
+          <div class="stats" role="status" aria-live="polite">
             <div class="stat">
               <span class="stat-value">{sortedTabs.length}</span>
               <span class="stat-label">{ageFilter > 0 || searchQuery ? 'filtered' : 'tabs'}</span>
@@ -362,8 +368,8 @@ export function App() {
         </div>
       </header>
 
-      <div class="table-container">
-        <table class="tab-table">
+      <div class="table-container" role="region" aria-label="Tab list">
+        <table class="tab-table" role="table">
           <thead>
             <tr>
               <th class="col-checkbox">
@@ -372,10 +378,13 @@ export function App() {
                   checked={sortedTabs.length > 0 && selectedTabs.size === sortedTabs.length}
                   onChange={toggleSelectAll}
                   class="tab-checkbox"
+                  aria-label="Select all tabs"
                   title="Select all"
                 />
               </th>
-              <th class="col-status" title="🟢 Active (10s) | 🔵 Recent (5m) | 🟡 Idle (1h) | 🔴 Dead (>1h)">?</th>
+              <th class="col-status" title="Status indicator: circle=active, diamond=recent, square=idle, x=dead">
+                <span aria-label="Status">?</span>
+              </th>
               <th class="col-title" onClick={() => handleSort('title')}>
                 Tab {sortColumn === 'title' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
@@ -413,23 +422,38 @@ export function App() {
                     await chrome.windows.update(tab.windowId, { focused: true });
                     await chrome.tabs.update(tab.id, { active: true });
                   }}
+                  role="row"
+                  aria-label={`${tab.title}, ${status}`}
                 >
-                  <td class="col-checkbox" onClick={(e) => e.stopPropagation()}>
+                  <td class="col-checkbox" onClick={(e) => e.stopPropagation()} role="cell">
                     <input
                       type="checkbox"
                       checked={selectedTabs.has(tab.id)}
                       onChange={() => toggleTabSelection(tab.id)}
                       class="tab-checkbox"
+                      aria-label={`Select ${tab.title}`}
                     />
                   </td>
-                  <td class="col-status">
-                    <div class={`status-indicator ${status}`} title={status}></div>
+                  <td class="col-status" role="cell">
+                    <div
+                      class={`status-indicator ${status}`}
+                      role="img"
+                      aria-label={`Status: ${status}`}
+                      title={status}
+                    ></div>
                   </td>
                   <td class="col-title">
                     <div class="tab-info">
                       {tab.favIconUrl && <img src={tab.favIconUrl} class="favicon" alt="" />}
                       <div class="tab-text">
-                        <div class="tab-title">{tab.title}</div>
+                        <div class="tab-title">
+                          {tab.title}
+                          {tab.isDiscarded && (
+                            <span class="suspended-badge" title="Tab suspended by Chrome to save memory">
+                              💤
+                            </span>
+                          )}
+                        </div>
                         <div class="tab-url">{new URL(tab.url).hostname}</div>
                       </div>
                     </div>
@@ -453,39 +477,49 @@ export function App() {
       <div class="legend">
         <div class="legend-item">
           <div class="status-indicator active"></div>
-          <span>Active (&lt;10s)</span>
+          <span>● Active (&lt;10s)</span>
         </div>
         <div class="legend-item">
           <div class="status-indicator recent"></div>
-          <span>Recent (&lt;5m)</span>
+          <span>◆ Recent (&lt;5m)</span>
         </div>
         <div class="legend-item">
           <div class="status-indicator idle"></div>
-          <span>Idle (&lt;1h)</span>
+          <span>■ Idle (&lt;1h)</span>
         </div>
         <div class="legend-item">
           <div class="status-indicator dead"></div>
-          <span>Dead (&gt;1h)</span>
+          <span>✕ Dead (&gt;1h)</span>
         </div>
       </div>
 
-      <footer class="footer">
+      <footer class="footer" role="contentinfo">
         <div class="footer-left">
-          <button class="btn-select-dead" onClick={selectAllDeadTabs}>
+          <button
+            class="btn-select-dead"
+            onClick={selectAllDeadTabs}
+            aria-label="Select all dead tabs"
+          >
             Select All Dead
           </button>
           {selectedTabs.size > 0 && (
-            <button class="btn-close-selected" onClick={closeSelectedTabs}>
+            <button
+              class="btn-close-selected"
+              onClick={closeSelectedTabs}
+              aria-label={`Close ${selectedTabs.size} selected tabs`}
+            >
               Close {selectedTabs.size} Selected
             </button>
           )}
         </div>
         <div class="footer-right">
           <div class="filter-controls">
-            <label class="filter-label">Show tabs older than:</label>
+            <label class="filter-label" for="age-filter">Show tabs older than:</label>
             <select
+              id="age-filter"
               class="filter-select"
               value={showCustomInput ? 'custom' : ageFilter}
+              aria-label="Filter tabs by age"
               onInput={(e) => {
                 const val = (e.target as HTMLSelectElement).value;
                 if (val === 'custom') {
@@ -511,6 +545,7 @@ export function App() {
                   class="custom-age-input"
                   placeholder="Days"
                   value={customAgeDays}
+                  aria-label="Custom age in days"
                   onInput={(e) => {
                     const val = (e.target as HTMLInputElement).value;
                     setCustomAgeDays(val);
@@ -527,13 +562,17 @@ export function App() {
               </>
             )}
             {ageFilter > 0 && filteredTabs.length > 0 && (
-              <button class="btn-close-filtered" onClick={closeFilteredTabs}>
+              <button
+                class="btn-close-filtered"
+                onClick={closeFilteredTabs}
+                aria-label={`Close ${filteredTabs.length} filtered tabs`}
+              >
                 Close {filteredTabs.length} Filtered
               </button>
             )}
           </div>
           <div class="refresh-section">
-            <button class="btn-refresh" onClick={loadTabData}>
+            <button class="btn-refresh" onClick={loadTabData} aria-label="Refresh tab data">
               ↻ Refresh
             </button>
             <span class="last-updated">
@@ -544,9 +583,9 @@ export function App() {
       </footer>
 
       {showUndoToast && (
-        <div class="undo-toast">
+        <div class="undo-toast" role="alert" aria-live="assertive">
           <span>Closed {recentlyClosed.length} tab{recentlyClosed.length !== 1 ? 's' : ''}</span>
-          <button class="btn-undo" onClick={undoClose}>
+          <button class="btn-undo" onClick={undoClose} aria-label={`Undo close ${recentlyClosed.length} tabs`}>
             Undo
           </button>
         </div>

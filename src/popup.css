@@ -11,7 +11,7 @@
   
   --text-primary: #e6e8eb;
   --text-secondary: #8a93a8;
-  --text-muted: #5c6573;
+  --text-muted: #7d8897;  /* Updated for WCAG AA compliance (5.38:1 contrast) */
   
   /* Status colors */
   --status-active: #00d9a3;
@@ -85,8 +85,8 @@ body {
 /* Header */
 .header {
   background: var(--bg-secondary);
-  border-bottom: 1px solid var(--border-strong);
-  padding: var(--spacing-lg);
+  border-bottom: 2px solid var(--border-subtle);
+  padding: var(--spacing-md) var(--spacing-lg);
   flex-shrink: 0;
 }
 
@@ -167,7 +167,8 @@ h1 {
 
 .stats {
   display: flex;
-  gap: var(--spacing-xl);
+  gap: var(--spacing-lg);
+  opacity: 0.9;
 }
 
 .stat {
@@ -179,9 +180,9 @@ h1 {
 
 .stat-value {
   font-family: var(--font-mono);
-  font-size: 20px;
-  font-weight: 600;
-  color: var(--text-primary);
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-secondary);
   line-height: 1;
 }
 
@@ -190,9 +191,9 @@ h1 {
 }
 
 .stat-label {
-  font-size: 10px;
+  font-size: 9px;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
   color: var(--text-muted);
   font-weight: 500;
 }
@@ -341,27 +342,53 @@ td {
 .status-indicator {
   width: 12px;
   height: 12px;
-  border-radius: 50%;
   margin: 0 auto;
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
+/* Active: ● (solid circle with glow) */
 .status-indicator.active {
   background: var(--status-active);
+  border-radius: 50%;
   box-shadow: 0 0 8px var(--status-active);
 }
 
+/* Recent: ◆ (diamond - rotated square) */
 .status-indicator.recent {
   background: var(--status-recent);
+  transform: rotate(45deg);
 }
 
+/* Idle: ■ (square) */
 .status-indicator.idle {
   background: var(--status-idle);
+  border-radius: 0;
 }
 
+/* Dead: ✕ (x mark using pseudo-elements) */
 .status-indicator.dead {
+  background: transparent;
+}
+
+.status-indicator.dead::before,
+.status-indicator.dead::after {
+  content: '';
+  position: absolute;
+  width: 12px;
+  height: 2px;
   background: var(--status-dead);
-  opacity: 0.4;
+  opacity: 0.6;
+}
+
+.status-indicator.dead::before {
+  transform: rotate(45deg);
+}
+
+.status-indicator.dead::after {
+  transform: rotate(-45deg);
 }
 
 /* Tab info */
@@ -390,6 +417,15 @@ td {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.suspended-badge {
+  font-size: 14px;
+  opacity: 0.7;
+  flex-shrink: 0;
 }
 
 .tab-url {
@@ -439,11 +475,13 @@ td {
   justify-content: center;
   align-items: center;
   gap: var(--spacing-xl);
-  padding: var(--spacing-md);
-  background: var(--bg-secondary);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--bg-primary);
   border-top: 1px solid var(--border-subtle);
-  font-size: 11px;
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 10px;
   color: var(--text-secondary);
+  opacity: 0.85;
 }
 
 .legend-item {
@@ -455,7 +493,7 @@ td {
 /* Footer */
 .footer {
   background: var(--bg-secondary);
-  border-top: 1px solid var(--border-strong);
+  border-top: 2px solid var(--border-subtle);
   padding: var(--spacing-md) var(--spacing-lg);
   display: flex;
   justify-content: space-between;
@@ -686,4 +724,46 @@ td {
 
 .btn-undo:active {
   transform: scale(0.98);
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  /* Disable spinner animation */
+  .spinner {
+    animation: none;
+    border-top-color: var(--status-active);
+  }
+
+  /* Disable toast slide-up animation */
+  .undo-toast {
+    animation: none;
+  }
+
+  @keyframes slideUp {
+    from, to {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+  }
+
+  /* Disable button transforms */
+  .btn-close-filtered:hover,
+  .btn-close-selected:hover,
+  .btn-undo:hover {
+    transform: none;
+  }
+
+  .btn-close-filtered:active,
+  .btn-close-selected:active,
+  .btn-refresh:active,
+  .btn-undo:active {
+    transform: none;
+  }
+
+  /* Keep transitions instant but no movement */
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

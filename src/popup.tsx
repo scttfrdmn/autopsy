@@ -54,17 +54,22 @@ export function App() {
       }
 
       // Cmd/Ctrl+A - Select all (when not in input)
-      if ((e.metaKey || e.ctrlKey) && e.key === 'a' &&
-          !(e.target as HTMLElement).matches('input, textarea')) {
+      if (
+        (e.metaKey || e.ctrlKey) &&
+        e.key === 'a' &&
+        !(e.target as HTMLElement).matches('input, textarea')
+      ) {
         e.preventDefault();
         toggleSelectAll();
         return;
       }
 
       // Delete/Backspace - Close selected tabs (when not in input)
-      if ((e.key === 'Delete' || e.key === 'Backspace') &&
-          !(e.target as HTMLElement).matches('input, textarea') &&
-          selectedTabs.size > 0) {
+      if (
+        (e.key === 'Delete' || e.key === 'Backspace') &&
+        !(e.target as HTMLElement).matches('input, textarea') &&
+        selectedTabs.size > 0
+      ) {
         e.preventDefault();
         closeSelectedTabs();
         return;
@@ -116,13 +121,14 @@ export function App() {
           requestCount: 0,
           bytesReceived: 0,
           lastActivity: null,
-          firstActivity: null
+          firstActivity: null,
         };
-        
+
         // Get tab group info
-        const group = tab.groupId !== chrome.tabGroups.TAB_GROUP_ID_NONE && groupMap.get(tab.groupId)
-          ? groupMap.get(tab.groupId)!
-          : null;
+        const group =
+          tab.groupId !== chrome.tabGroups.TAB_GROUP_ID_NONE && groupMap.get(tab.groupId)
+            ? groupMap.get(tab.groupId)!
+            : null;
 
         return {
           id: tab.id!,
@@ -131,26 +137,29 @@ export function App() {
           favIconUrl: tab.favIconUrl,
           windowId: tab.windowId,
           created,
-          lastAccessed: (tab as any).lastAccessed || Date.now(),
+          lastAccessed:
+            (tab as chrome.tabs.Tab & { lastAccessed?: number }).lastAccessed || Date.now(),
           networkActivity: network,
           memoryUsage: null,
           isActive: tab.active || false,
           isPinned: tab.pinned || false,
           isAudible: tab.audible || false,
           isDiscarded: tab.discarded || false,
-          groupInfo: group ? {
-            id: group.id,
-            title: group.title,
-            color: group.color
-          } : null
+          groupInfo: group
+            ? {
+                id: group.id,
+                title: group.title,
+                color: group.color,
+              }
+            : null,
         };
       });
-      
+
       setTabs(metrics);
       setLoading(false);
       setLastUpdated(Date.now());
-    } catch (error) {
-      console.error('Error loading tab data:', error);
+    } catch {
+      // Silently fail - extension will retry
       setLoading(false);
     }
   };
@@ -183,8 +192,9 @@ export function App() {
   });
 
   const sortedTabs = [...filteredTabs].sort((a, b) => {
-    let aVal: any, bVal: any;
-    
+    let aVal: string | number;
+    let bVal: string | number;
+
     switch (sortColumn) {
       case 'title':
         aVal = a.title.toLowerCase();
@@ -217,39 +227,46 @@ export function App() {
       default:
         return 0;
     }
-    
+
     const comparison = aVal > bVal ? 1 : aVal < bVal ? -1 : 0;
     return sortDirection === 'asc' ? comparison : -comparison;
   });
 
   // Group tabs based on groupBy mode
-  const groupedTabs = groupBy !== 'none'
-    ? sortedTabs.reduce((groups, tab) => {
-        let groupKey: string;
+  const groupedTabs =
+    groupBy !== 'none'
+      ? sortedTabs.reduce(
+          (groups, tab) => {
+            let groupKey: string;
 
-        if (groupBy === 'domain') {
-          groupKey = new URL(tab.url).hostname;
-        } else if (groupBy === 'window') {
-          groupKey = `window-${tab.windowId}`;
-        } else if (groupBy === 'status') {
-          groupKey = getActivityStatus(tab);
-        } else {
-          groupKey = 'other';
-        }
+            if (groupBy === 'domain') {
+              groupKey = new URL(tab.url).hostname;
+            } else if (groupBy === 'window') {
+              groupKey = `window-${tab.windowId}`;
+            } else if (groupBy === 'status') {
+              groupKey = getActivityStatus(tab);
+            } else {
+              groupKey = 'other';
+            }
 
-        if (!groups[groupKey]) {
-          groups[groupKey] = [];
-        }
-        groups[groupKey].push(tab);
-        return groups;
-      }, {} as Record<string, TabMetrics[]>)
-    : {};
+            if (!groups[groupKey]) {
+              groups[groupKey] = [];
+            }
+            groups[groupKey].push(tab);
+            return groups;
+          },
+          {} as Record<string, TabMetrics[]>
+        )
+      : {};
 
   const sortedGroups = Object.entries(groupedTabs).sort(([keyA, tabsA], [keyB, tabsB]) => {
     // For status grouping, sort by priority: active > recent > idle > dead
     if (groupBy === 'status') {
       const statusOrder = { active: 0, recent: 1, idle: 2, dead: 3 };
-      return statusOrder[keyA as keyof typeof statusOrder] - statusOrder[keyB as keyof typeof statusOrder];
+      return (
+        statusOrder[keyA as keyof typeof statusOrder] -
+        statusOrder[keyB as keyof typeof statusOrder]
+      );
     }
     // For other grouping modes, sort by tab count (descending)
     return tabsB.length - tabsA.length;
@@ -271,7 +288,12 @@ export function App() {
   };
 
   const cycleGroupMode = () => {
-    const modes: Array<'none' | 'domain' | 'window' | 'status'> = ['none', 'domain', 'window', 'status'];
+    const modes: Array<'none' | 'domain' | 'window' | 'status'> = [
+      'none',
+      'domain',
+      'window',
+      'status',
+    ];
     const currentIndex = modes.indexOf(groupBy);
     const nextIndex = (currentIndex + 1) % modes.length;
     setGroupBy(modes[nextIndex]);
@@ -291,7 +313,7 @@ export function App() {
         active: 'Active (<10s)',
         recent: 'Recent (<5m)',
         idle: 'Idle (<1h)',
-        dead: 'Dead (>1h)'
+        dead: 'Dead (>1h)',
       };
       return statusLabels[groupKey as keyof typeof statusLabels] || groupKey;
     }
@@ -325,16 +347,16 @@ export function App() {
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     });
   };
 
   const getActivityStatus = (tab: TabMetrics): 'active' | 'recent' | 'idle' | 'dead' => {
     const now = Date.now();
     const lastNet = tab.networkActivity.lastActivity;
-    
+
     if (!lastNet) return 'dead';
-    
+
     const diff = now - lastNet;
     if (diff < 10000) return 'active'; // < 10 sec
     if (diff < 300000) return 'recent'; // < 5 min
@@ -388,7 +410,9 @@ export function App() {
       sorted.slice(1).forEach(tab => tabsToClose.push(tab.id));
     });
 
-    const confirmed = confirm(`Close ${tabsToClose.length} duplicate tabs? (Keeping newest of each)`);
+    const confirmed = confirm(
+      `Close ${tabsToClose.length} duplicate tabs? (Keeping newest of each)`
+    );
     if (!confirmed) return;
 
     await chrome.tabs.remove(tabsToClose);
@@ -399,14 +423,14 @@ export function App() {
     if (selectedTabs.size === 0) return;
     const tabIds = Array.from(selectedTabs);
     await Promise.all(tabIds.map(id => chrome.tabs.update(id, { pinned: true })));
-    setTabs(tabs.map(t => tabIds.includes(t.id) ? { ...t, isPinned: true } : t));
+    setTabs(tabs.map(t => (tabIds.includes(t.id) ? { ...t, isPinned: true } : t)));
   };
 
   const bulkUnpin = async () => {
     if (selectedTabs.size === 0) return;
     const tabIds = Array.from(selectedTabs);
     await Promise.all(tabIds.map(id => chrome.tabs.update(id, { pinned: false })));
-    setTabs(tabs.map(t => tabIds.includes(t.id) ? { ...t, isPinned: false } : t));
+    setTabs(tabs.map(t => (tabIds.includes(t.id) ? { ...t, isPinned: false } : t)));
   };
 
   const moveToNewWindow = async () => {
@@ -439,9 +463,7 @@ export function App() {
   };
 
   const selectAllDeadTabs = () => {
-    const deadTabIds = sortedTabs
-      .filter(t => getActivityStatus(t) === 'dead')
-      .map(t => t.id);
+    const deadTabIds = sortedTabs.filter(t => getActivityStatus(t) === 'dead').map(t => t.id);
     setSelectedTabs(new Set(deadTabIds));
   };
 
@@ -485,7 +507,7 @@ export function App() {
       await chrome.tabs.create({
         url: tab.url,
         pinned: tab.pinned,
-        index: tab.index
+        index: tab.index,
       });
     }
     setShowUndoToast(false);
@@ -547,7 +569,7 @@ export function App() {
       'Group',
       'Request Count',
       'Bytes Transferred',
-      'Last Network Activity'
+      'Last Network Activity',
     ];
 
     const rows = sortedTabs.map(tab => {
@@ -570,7 +592,9 @@ export function App() {
         tab.groupInfo?.title || '',
         tab.networkActivity.requestCount,
         tab.networkActivity.bytesReceived,
-        tab.networkActivity.lastActivity ? new Date(tab.networkActivity.lastActivity).toISOString() : ''
+        tab.networkActivity.lastActivity
+          ? new Date(tab.networkActivity.lastActivity).toISOString()
+          : '',
       ].join(',');
     });
 
@@ -599,17 +623,19 @@ export function App() {
         isPinned: tab.isPinned,
         isAudible: tab.isAudible,
         isDiscarded: tab.isDiscarded,
-        group: tab.groupInfo ? {
-          id: tab.groupInfo.id,
-          title: tab.groupInfo.title,
-          color: tab.groupInfo.color
-        } : null,
+        group: tab.groupInfo
+          ? {
+              id: tab.groupInfo.id,
+              title: tab.groupInfo.title,
+              color: tab.groupInfo.color,
+            }
+          : null,
         networkActivity: {
           requestCount: tab.networkActivity.requestCount,
           bytesReceived: tab.networkActivity.bytesReceived,
           lastActivity: tab.networkActivity.lastActivity,
-          firstActivity: tab.networkActivity.firstActivity
-        }
+          firstActivity: tab.networkActivity.firstActivity,
+        },
       };
     });
 
@@ -643,7 +669,7 @@ export function App() {
         role="row"
         aria-label={`${tab.title}, ${status}`}
       >
-        <td class="col-checkbox" onClick={(e) => e.stopPropagation()} role="cell">
+        <td class="col-checkbox" onClick={e => e.stopPropagation()} role="cell">
           <input
             type="checkbox"
             checked={selectedTabs.has(tab.id)}
@@ -685,12 +711,8 @@ export function App() {
         </td>
         <td class="col-time">{formatTime(age)}</td>
         <td class="col-timestamp">{formatTimestamp(tab.networkActivity.lastActivity)}</td>
-        <td class="col-number">
-          {tab.networkActivity.requestCount ?? 0}
-        </td>
-        <td class="col-number">
-          {formatBytes(tab.networkActivity.bytesReceived)}
-        </td>
+        <td class="col-number">{tab.networkActivity.requestCount ?? 0}</td>
+        <td class="col-number">{formatBytes(tab.networkActivity.bytesReceived)}</td>
       </tr>
     );
   };
@@ -700,7 +722,9 @@ export function App() {
       <header class="header" role="banner">
         <div class="header-content">
           <h1>
-            <span class="logo" aria-hidden="true">⚕</span>
+            <span class="logo" aria-hidden="true">
+              ⚕
+            </span>
             Autopsy
           </h1>
           <div class="search-box" role="search">
@@ -709,7 +733,7 @@ export function App() {
               class="search-input"
               placeholder="Search tabs..."
               value={searchQuery}
-              onInput={(e) => setSearchQuery((e.target as HTMLInputElement).value)}
+              onInput={e => setSearchQuery((e.target as HTMLInputElement).value)}
               aria-label="Search tabs by title or URL"
             />
             {searchQuery && (
@@ -728,7 +752,13 @@ export function App() {
             aria-label={`Cycle grouping mode (current: ${groupBy})`}
             title={`Group by: ${groupBy} (click to cycle)`}
           >
-            {groupBy === 'none' ? '⚏' : groupBy === 'domain' ? '🌐' : groupBy === 'window' ? '🪟' : '📊'}
+            {groupBy === 'none'
+              ? '⚏'
+              : groupBy === 'domain'
+                ? '🌐'
+                : groupBy === 'window'
+                  ? '🪟'
+                  : '📊'}
           </button>
           <button
             class="btn-theme-toggle"
@@ -765,7 +795,10 @@ export function App() {
                   title="Select all"
                 />
               </th>
-              <th class="col-status" title="Status indicator: circle=active, diamond=recent, square=idle, x=dead">
+              <th
+                class="col-status"
+                title="Status indicator: circle=active, diamond=recent, square=idle, x=dead"
+              >
                 <span aria-label="Status">?</span>
               </th>
               <th class="col-title" onClick={() => handleSort('title')}>
@@ -775,12 +808,17 @@ export function App() {
                 Tab Age {sortColumn === 'created' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
               <th class="col-timestamp" onClick={() => handleSort('networkActivity')}>
-                Last Activity {sortColumn === 'networkActivity' && (sortDirection === 'asc' ? '↑' : '↓')}
+                Last Activity{' '}
+                {sortColumn === 'networkActivity' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
               <th class="col-number" onClick={() => handleSort('requestCount')}>
                 Requests {sortColumn === 'requestCount' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
-              <th class="col-number" onClick={() => handleSort('bytesTransferred')} title="Network data transferred - high values indicate resource-heavy tabs">
+              <th
+                class="col-number"
+                onClick={() => handleSort('bytesTransferred')}
+                title="Network data transferred - high values indicate resource-heavy tabs"
+              >
                 Data {sortColumn === 'bytesTransferred' && (sortDirection === 'asc' ? '↑' : '↓')}
               </th>
             </tr>
@@ -800,13 +838,17 @@ export function App() {
                 return (
                   <>
                     <tr class="group-header" key={`group-${groupKey}`}>
-                      <td colSpan={7} onClick={() => toggleGroup(groupKey)} class="group-header-cell">
+                      <td
+                        colSpan={7}
+                        onClick={() => toggleGroup(groupKey)}
+                        class="group-header-cell"
+                      >
                         <span class="group-toggle">{isCollapsed ? '▸' : '▾'}</span>
                         <span class="group-name">{groupLabel}</span>
                         <span class="group-count">({tabs.length})</span>
                         <button
                           class="btn-select-group"
-                          onClick={(e) => {
+                          onClick={e => {
                             e.stopPropagation();
                             selectGroup(groupKey);
                           }}
@@ -898,13 +940,15 @@ export function App() {
         </div>
         <div class="footer-right">
           <div class="filter-controls">
-            <label class="filter-label" for="age-filter">Show tabs older than:</label>
+            <label class="filter-label" htmlFor="age-filter">
+              Show tabs older than:
+            </label>
             <select
               id="age-filter"
               class="filter-select"
               value={showCustomInput ? 'custom' : ageFilter}
               aria-label="Filter tabs by age"
-              onInput={(e) => {
+              onInput={e => {
                 const val = (e.target as HTMLSelectElement).value;
                 if (val === 'custom') {
                   setShowCustomInput(true);
@@ -930,7 +974,7 @@ export function App() {
                   placeholder="Days"
                   value={customAgeDays}
                   aria-label="Custom age in days"
-                  onInput={(e) => {
+                  onInput={e => {
                     const val = (e.target as HTMLInputElement).value;
                     setCustomAgeDays(val);
                     const days = parseInt(val, 10);
@@ -959,9 +1003,7 @@ export function App() {
             <button class="btn-refresh" onClick={loadTabData} aria-label="Refresh tab data">
               ↻ Refresh
             </button>
-            <span class="last-updated">
-              Updated {formatTime(Date.now() - lastUpdated)}
-            </span>
+            <span class="last-updated">Updated {formatTime(Date.now() - lastUpdated)}</span>
           </div>
           <div class="width-controls">
             <label class="filter-label">Width:</label>
@@ -1011,8 +1053,14 @@ export function App() {
 
       {showUndoToast && (
         <div class="undo-toast" role="alert" aria-live="assertive">
-          <span>Closed {recentlyClosed.length} tab{recentlyClosed.length !== 1 ? 's' : ''}</span>
-          <button class="btn-undo" onClick={undoClose} aria-label={`Undo close ${recentlyClosed.length} tabs`}>
+          <span>
+            Closed {recentlyClosed.length} tab{recentlyClosed.length !== 1 ? 's' : ''}
+          </span>
+          <button
+            class="btn-undo"
+            onClick={undoClose}
+            aria-label={`Undo close ${recentlyClosed.length} tabs`}
+          >
             Undo
           </button>
         </div>

@@ -18,7 +18,7 @@ const createFingerprint = (url: string, windowId: number, index: number): string
 };
 
 // Track tab creation times with instance metadata
-chrome.tabs.onCreated.addListener((tab) => {
+chrome.tabs.onCreated.addListener(tab => {
   if (tab.id && tab.url) {
     const now = Date.now();
     const fingerprint = createFingerprint(tab.url, tab.windowId, tab.index);
@@ -32,8 +32,8 @@ chrome.tabs.onCreated.addListener((tab) => {
         windowId: tab.windowId,
         index: tab.index,
         created: now,
-        lastSeen: now
-      } as TabInstance
+        lastSeen: now,
+      } as TabInstance,
     });
   }
 });
@@ -45,7 +45,7 @@ const initializeTabAges = async () => {
   const storage = await chrome.storage.local.get(null);
 
   // Clean up old instance data (older than 30 days)
-  const thirtyDaysAgo = now - (30 * 24 * 60 * 60 * 1000);
+  const thirtyDaysAgo = now - 30 * 24 * 60 * 60 * 1000;
   const keysToRemove: string[] = [];
 
   for (const key in storage) {
@@ -76,7 +76,7 @@ const initializeTabAges = async () => {
 
       // Update last seen
       chrome.storage.local.set({
-        [instanceKey]: { ...instance, lastSeen: now }
+        [instanceKey]: { ...instance, lastSeen: now },
       });
     } else {
       // Try to find similar instance (same URL, different position)
@@ -113,14 +113,14 @@ const initializeTabAges = async () => {
           windowId: tab.windowId,
           index: tab.index,
           created: tabAge,
-          lastSeen: now
-        } as TabInstance
+          lastSeen: now,
+        } as TabInstance,
       });
     }
 
     // Set tab created time
     chrome.storage.local.set({
-      [`tab_${tab.id}_created`]: tabAge
+      [`tab_${tab.id}_created`]: tabAge,
     });
   }
 };
@@ -139,7 +139,7 @@ chrome.tabs.onUpdated.addListener(async (_tabId, changeInfo, tab) => {
     if (!result[`url_${tab.url}_first_seen`]) {
       // First time seeing this URL
       await chrome.storage.local.set({
-        [`url_${tab.url}_first_seen`]: now
+        [`url_${tab.url}_first_seen`]: now,
       });
     }
 
@@ -151,9 +151,9 @@ chrome.tabs.onUpdated.addListener(async (_tabId, changeInfo, tab) => {
         windowId: tab.windowId,
         index: tab.index,
         created: now, // New URL means new instance
-        lastSeen: now
+        lastSeen: now,
       } as TabInstance,
-      [`tab_${tab.id}_created`]: now
+      [`tab_${tab.id}_created`]: now,
     });
   }
 });
@@ -177,8 +177,8 @@ chrome.tabs.onMoved.addListener(async (tabId, moveInfo) => {
       [`instance_${newFingerprint}`]: {
         ...oldInstance,
         index: moveInfo.toIndex,
-        lastSeen: now
-      }
+        lastSeen: now,
+      },
     });
     await chrome.storage.local.remove(`instance_${oldFingerprint}`);
   }
@@ -214,13 +214,13 @@ chrome.tabs.onAttached.addListener(async (tabId, attachInfo) => {
       windowId: attachInfo.newWindowId,
       index: attachInfo.newPosition,
       created: existingInstance?.created || now,
-      lastSeen: now
-    } as TabInstance
+      lastSeen: now,
+    } as TabInstance,
   });
 });
 
 // Clean up when tabs close
-chrome.tabs.onRemoved.addListener(async (tabId) => {
+chrome.tabs.onRemoved.addListener(async tabId => {
   await chrome.storage.local.remove(`tab_${tabId}_created`);
   delete networkStats[tabId];
 
@@ -230,30 +230,30 @@ chrome.tabs.onRemoved.addListener(async (tabId) => {
 
 // Track network activity (lightweight - only count and timing)
 chrome.webRequest.onCompleted.addListener(
-  (details) => {
+  details => {
     const tabId = details.tabId;
     if (tabId === -1) return; // Skip non-tab requests
-    
+
     if (!networkStats[tabId]) {
       networkStats[tabId] = {
         requestCount: 0,
         bytesReceived: 0,
         lastActivity: null,
-        firstActivity: null
+        firstActivity: null,
       };
     }
-    
+
     const stats = networkStats[tabId];
-    
+
     // Update timing
     stats.lastActivity = details.timeStamp;
     if (!stats.firstActivity) {
       stats.firstActivity = details.timeStamp;
     }
-    
+
     // Update counts
     stats.requestCount++;
-    
+
     // Try to get content length (not always present)
     if (details.responseHeaders) {
       const contentLength = details.responseHeaders.find(
@@ -275,5 +275,3 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
     return true;
   }
 });
-
-console.log('Autopsy background worker initialized');

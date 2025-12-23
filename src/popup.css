@@ -5,33 +5,33 @@
   --bg-primary: #0a0e14;
   --bg-secondary: #13171f;
   --bg-elevated: #1a1f2b;
-  
+
   --border-subtle: #252a36;
   --border-strong: #353d4f;
-  
+
   --text-primary: #e6e8eb;
   --text-secondary: #8a93a8;
-  --text-muted: #7d8897;  /* Updated for WCAG AA compliance (5.38:1 contrast) */
-  
+  --text-muted: #7d8897; /* Updated for WCAG AA compliance (5.38:1 contrast) */
+
   /* Status colors */
   --status-active: #00d9a3;
   --status-recent: #4da6ff;
   --status-idle: #ffb84d;
   --status-dead: #ff6b6b;
-  
+
   /* Metric colors */
   --metric-memory: #ff8c42;
   --metric-network: #4da6ff;
   --metric-time: #a78bfa;
-  
+
   /* UI */
   --hover-bg: rgba(255, 255, 255, 0.03);
   --active-bg: rgba(0, 217, 163, 0.08);
-  
+
   /* Typography */
   --font-ui: 'Inter', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', 'Courier New', monospace;
-  
+
   /* Spacing */
   --spacing-xs: 4px;
   --spacing-sm: 8px;
@@ -41,7 +41,7 @@
 }
 
 /* Light theme overrides */
-[data-theme="light"] {
+[data-theme='light'] {
   /* Colors - Light Theme */
   --bg-primary: #f8f9fa;
   --bg-secondary: #ffffff;
@@ -106,7 +106,9 @@ body {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Header */
@@ -321,7 +323,6 @@ th:hover {
   text-align: right;
 }
 
-
 /* Group headers (domain, window, status) */
 .group-header {
   background: var(--bg-elevated);
@@ -519,15 +520,33 @@ td {
 }
 
 /* Chrome tab group colors */
-.group-grey { background: #5f6368; }
-.group-blue { background: #4285f4; }
-.group-red { background: #ea4335; }
-.group-yellow { background: #fbbc04; }
-.group-green { background: #34a853; }
-.group-pink { background: #ff6d00; }
-.group-purple { background: #9334e6; }
-.group-cyan { background: #00bcd4; }
-.group-orange { background: #ff9800; }
+.group-grey {
+  background: #5f6368;
+}
+.group-blue {
+  background: #4285f4;
+}
+.group-red {
+  background: #ea4335;
+}
+.group-yellow {
+  background: #fbbc04;
+}
+.group-green {
+  background: #34a853;
+}
+.group-pink {
+  background: #ff6d00;
+}
+.group-purple {
+  background: #9334e6;
+}
+.group-cyan {
+  background: #00bcd4;
+}
+.group-orange {
+  background: #ff9800;
+}
 
 .suspended-badge {
   font-size: 14px;
@@ -574,7 +593,6 @@ td {
   font-weight: 500;
   text-align: right;
 }
-
 
 /* Legend */
 .legend {
@@ -986,7 +1004,8 @@ td {
   }
 
   @keyframes slideUp {
-    from, to {
+    from,
+    to {
       transform: translateX(-50%) translateY(0);
       opacity: 1;
     }

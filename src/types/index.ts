@@ -4,11 +4,11 @@ export interface TabMetrics {
   url: string;
   favIconUrl?: string;
   windowId: number;
-  
+
   // Timestamps
   created: number | null;
   lastAccessed: number;
-  
+
   // Network activity
   networkActivity: {
     requestCount: number;
@@ -16,10 +16,10 @@ export interface TabMetrics {
     lastActivity: number | null;
     firstActivity: number | null;
   };
-  
+
   // Memory (may be grouped across tabs in same process)
   memoryUsage: number | null; // in bytes
-  
+
   // Computed flags
   isActive: boolean;
   isPinned: boolean;

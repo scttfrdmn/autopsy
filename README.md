@@ -1,5 +1,11 @@
 # Autopsy
 
+[![Version](https://img.shields.io/badge/version-0.20.0-blue.svg)](https://github.com/scttfrdmn/autopsy/releases)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue.svg)](https://www.typescriptlang.org/)
+[![ESLint](https://img.shields.io/badge/ESLint-passing-brightgreen.svg)](eslint.config.js)
+[![Code Style](https://img.shields.io/badge/code%20style-prettier-ff69b4.svg)](https://prettier.io/)
+
 > Surgical precision tab analysis — find what to close
 
 A lightweight, professional Chrome extension that helps you identify which tabs to close by analyzing:
@@ -11,21 +17,38 @@ A lightweight, professional Chrome extension that helps you identify which tabs 
 
 ## Features
 
-🔍 **Smart Analysis**
-- Real-time network activity tracking
-- Memory usage per tab (when available)
-- Intelligent status indicators (active, recent, idle, dead)
+### 🔍 Smart Analysis
+- **Real-time network activity tracking** — Monitor requests, bytes, and timing
+- **Intelligent status indicators** — Active (●), Recent (◆), Idle (■), Dead (✕)
+- **Per-instance age tracking** — Accurate tab ages across browser restarts
+- **Memory usage insights** — Identify resource-heavy tabs
 
-⚡ **Lightweight Design**
+### 🎯 Bulk Operations
+- **Close duplicates** — Remove duplicate URLs, keep newest
+- **Bulk pin/unpin** — Manage multiple tabs at once
+- **Select by domain** — Quick domain-wide selection
+- **Move to new window** — Organize tabs across windows
+
+### 📊 Advanced Grouping
+- **Group by domain** — Organize tabs by website
+- **Group by window** — See tabs per browser window
+- **Group by status** — View by activity level
+- **Collapsible groups** — Clean, organized view
+
+### 📁 Data Export
+- **CSV export** — Spreadsheet analysis
+- **JSON export** — Programmatic processing
+- **Full metrics** — Age, status, network stats, groups
+
+### 🎨 Customization
+- **Dark/Light themes** — System preference support
+- **Responsive width** — Small, Medium, Large sizes
+- **Accessible design** — WCAG AA compliant, shape variants
+
+### ⚡ Lightweight Design
 - Built with Preact (3KB vs React's 40KB)
 - Efficient background worker
 - Minimal resource footprint — doesn't contribute to the problem!
-
-💎 **Professional UI**
-- Clean, surgical aesthetic
-- Sortable columns
-- Click to focus tabs
-- One-click tab closing
 
 ## Installation
 

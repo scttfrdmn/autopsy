@@ -9,12 +9,14 @@
     "preview": "vite preview",
     "lint": "eslint src --ext .ts,.tsx",
     "lint:fix": "eslint src --ext .ts,.tsx --fix",
-    "format": "prettier --write \"src/**/*.{ts,tsx,css}\""
+    "format": "prettier --write \"src/**/*.{ts,tsx,css}\"",
+    "screenshots": "node scripts/capture-screenshots.js"
   },
   "dependencies": {
     "preact": "^10.19.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.57.0",
     "@preact/preset-vite": "^2.8.1",
     "@types/chrome": "^0.0.258",
     "@typescript-eslint/eslint-plugin": "^8.50.1",
@@ -22,6 +24,7 @@
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-react": "^7.37.5",
+    "playwright": "^1.57.0",
     "prettier": "^3.7.4",
     "typescript": "^5.3.3",
     "vite": "^5.0.11"

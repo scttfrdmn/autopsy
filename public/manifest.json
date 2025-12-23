@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Autopsy",
   "version": "0.20.0",
-  "description": "Surgical precision tab analysis - find what to close",
+  "description": "Postmortem analysis for your tabs - find what to close",
   "permissions": [
     "tabs",
     "tabGroups",

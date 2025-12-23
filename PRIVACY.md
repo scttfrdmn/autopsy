@@ -67,8 +67,9 @@ We may update this privacy policy from time to time. Changes will be posted on t
 ## Contact
 
 For questions, concerns, or to report issues:
-- GitHub Issues: https://github.com/scttfrdmn/autopsy/issues
-- Source Code: https://github.com/scttfrdmn/autopsy
+- **Email:** autopsy.tabs@gmail.com
+- **GitHub Issues:** https://github.com/scttfrdmn/autopsy/issues
+- **Source Code:** https://github.com/scttfrdmn/autopsy
 
 ## Open Source
 

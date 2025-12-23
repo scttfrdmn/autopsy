@@ -4,12 +4,12 @@
 
 ### Short Description (132 characters max)
 ```
-Surgical precision tab analysis. Find what to close with real-time network tracking, bulk operations, and smart grouping.
+Postmortem analysis for your tabs. Find what to close with real-time network tracking, bulk operations, and smart grouping.
 ```
 
 ### Detailed Description
 ```
-Autopsy helps you identify which tabs to close through surgical precision analysis.
+Autopsy helps you identify which tabs to close through postmortem analysis.
 
 🔍 SMART ANALYSIS
 • Real-time network activity tracking — Monitor requests, bytes transferred, and timing
@@ -48,7 +48,11 @@ PERFECT FOR:
 • Tab hoarders who need to identify safe-to-close tabs
 • Developers juggling dozens of documentation tabs
 • Researchers tracking multiple sources
-• Anyone wanting to understand their browsing patterns
+• Anyone wanting to understand their tab usage patterns
+
+CONTACT & SUPPORT:
+Questions or feedback? Email: autopsy.tabs@gmail.com
+Issues and feature requests: https://github.com/scttfrdmn/autopsy/issues
 
 PRIVACY & SECURITY:
 All data stays local on your device. No cloud sync, no tracking, no telemetry. Autopsy analyzes your tabs entirely within your browser.
@@ -111,8 +115,8 @@ English
 
 #### Small Tile - 440×280 (Required)
 - Minimalist design with Autopsy icon
-- Tagline: "Surgical precision tab analysis"
-- Use brand colors (surgical blue/teal)
+- Tagline: "Postmortem analysis for your tabs"
+- Use brand colors (medical/forensic blue/teal)
 
 #### Marquee - 1400×560 (Optional)
 - Feature highlights with icons

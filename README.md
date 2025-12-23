@@ -6,7 +6,7 @@
 [![ESLint](https://img.shields.io/badge/ESLint-passing-brightgreen.svg)](eslint.config.js)
 [![Code Style](https://img.shields.io/badge/code%20style-prettier-ff69b4.svg)](https://prettier.io/)
 
-> Surgical precision tab analysis — find what to close
+> Postmortem analysis for your tabs — find what to close
 
 A lightweight, professional Chrome extension that helps you identify which tabs to close by analyzing:
 - Last accessed time
@@ -142,6 +142,12 @@ Built with:
 ## License
 
 MIT
+
+## Contact
+
+**Support:** autopsy.tabs@gmail.com
+**Issues:** https://github.com/scttfrdmn/autopsy/issues
+**Source:** https://github.com/scttfrdmn/autopsy
 
 ---
 

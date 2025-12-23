@@ -238,6 +238,11 @@ export function App() {
   };
 
   const filteredTabs = tabs.filter(tab => {
+    // Filter out extension pages (including Autopsy itself)
+    if (tab.url.startsWith('chrome-extension://') || tab.url.startsWith('chrome://')) {
+      return false;
+    }
+
     // Age filter
     if (ageFilter > 0) {
       const age = tab.created ? Date.now() - tab.created : null;

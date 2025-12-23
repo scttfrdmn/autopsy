@@ -859,16 +859,17 @@ td {
 }
 
 .btn-refresh {
-  padding: var(--spacing-sm) var(--spacing-lg);
+  padding: var(--spacing-xs) var(--spacing-md);
   background: var(--bg-elevated);
   border: 1px solid var(--border-strong);
   color: var(--text-secondary);
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 500;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
   font-family: var(--font-ui);
   cursor: pointer;
   transition: all 0.15s ease;
+  white-space: nowrap;
 }
 
 .btn-refresh:hover {
@@ -910,7 +911,8 @@ td {
   font-family: var(--font-ui);
   cursor: pointer;
   transition: all 0.15s ease;
-  min-width: 28px;
+  white-space: nowrap;
+  min-width: 32px;
 }
 
 .btn-width:hover {
@@ -995,8 +997,8 @@ td {
 .btn-export {
   padding: var(--spacing-xs) var(--spacing-md);
   background: var(--bg-elevated);
-  border: 1px solid var(--status-recent);
-  color: var(--status-recent);
+  border: 1px solid var(--border-strong);
+  color: var(--text-secondary);
   border-radius: 4px;
   font-size: 11px;
   font-weight: 600;
@@ -1004,12 +1006,13 @@ td {
   cursor: pointer;
   transition: all 0.15s ease;
   white-space: nowrap;
+  min-width: 60px;
 }
 
 .btn-export:hover {
-  background: rgba(77, 166, 255, 0.1);
-  border-color: #6bb6ff;
-  color: #6bb6ff;
+  background: var(--hover-bg);
+  border-color: var(--text-muted);
+  color: var(--text-primary);
 }
 
 /* Undo Toast */

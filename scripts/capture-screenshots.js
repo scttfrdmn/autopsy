@@ -137,6 +137,44 @@ async function main() {
   console.log('✓ Storage cleared');
   await wait(1000); // Wait for storage to clear
 
+  // Set realistic fake ages for variety in screenshots
+  console.log('📅 Setting realistic tab ages...');
+  const setupPage = await context.newPage();
+  await setupPage.goto(popupUrl);
+  await setupPage.evaluate(() => {
+    // Get all tabs and set varied ages
+    return chrome.tabs.query({}).then(tabs => {
+      const now = Date.now();
+      const ages = [
+        5 * 60 * 1000,        // 5 minutes
+        15 * 60 * 1000,       // 15 minutes
+        45 * 60 * 1000,       // 45 minutes
+        2 * 60 * 60 * 1000,   // 2 hours
+        5 * 60 * 60 * 1000,   // 5 hours
+        1 * 24 * 60 * 60 * 1000,    // 1 day
+        3 * 24 * 60 * 60 * 1000,    // 3 days
+        7 * 24 * 60 * 60 * 1000,    // 7 days
+        14 * 24 * 60 * 60 * 1000,   // 14 days
+        30 * 24 * 60 * 60 * 1000,   // 30 days
+      ];
+
+      const storageData = {};
+      tabs.forEach((tab, index) => {
+        if (tab.id && tab.url && !tab.url.startsWith('chrome-extension://')) {
+          // Assign varied ages in a cycling pattern
+          const ageOffset = ages[index % ages.length];
+          const created = now - ageOffset;
+          storageData[`tab_${tab.id}_created`] = created;
+        }
+      });
+
+      return chrome.storage.local.set(storageData);
+    });
+  });
+  await setupPage.close();
+  console.log('✓ Realistic ages set');
+  await wait(1000);
+
   // Screenshot 1: Main Interface
   console.log('\n📸 Screenshot 1: Main Interface...');
   const popup1 = await context.newPage();

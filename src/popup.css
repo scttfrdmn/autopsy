@@ -282,7 +282,9 @@ h1 {
 
 .tab-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate; /* Changed from collapse for resize handles */
+  border-spacing: 0; /* Keep tight borders */
+  table-layout: fixed; /* Fixed layout for explicit widths */
 }
 
 thead {
@@ -293,6 +295,7 @@ thead {
 }
 
 th {
+  position: relative; /* For resize handles */
   padding: var(--spacing-md);
   text-align: left;
   font-size: 10px;
@@ -309,6 +312,10 @@ th {
 th:hover {
   color: var(--text-secondary);
   background: var(--hover-bg);
+}
+
+.th-content {
+  display: inline;
 }
 
 .col-checkbox {
@@ -352,6 +359,46 @@ th:hover {
 .col-memory {
   width: 100px;
   text-align: right;
+}
+
+/* Column resize handles */
+.column-resize-handle {
+  position: absolute;
+  right: -4px;
+  top: 0;
+  bottom: 0;
+  width: 8px;
+  cursor: col-resize;
+  z-index: 20;
+  user-select: none;
+}
+
+.column-resize-handle::after {
+  content: '';
+  position: absolute;
+  right: 3px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: transparent;
+  transition: background 0.15s ease;
+}
+
+.column-resize-handle:hover::after {
+  background: var(--status-active);
+  opacity: 0.6;
+}
+
+.column-resize-handle.resizing::after {
+  background: var(--status-active);
+  opacity: 1;
+}
+
+/* Global cursor during resize */
+body.resizing-column,
+body.resizing-column * {
+  cursor: col-resize !important;
+  user-select: none;
 }
 
 /* Group headers (domain, window, status) */
@@ -929,6 +976,11 @@ td {
   background: var(--status-active);
   border-color: var(--status-active);
   color: var(--bg-primary);
+}
+
+.width-divider {
+  color: var(--text-muted);
+  padding: 0 var(--spacing-sm);
 }
 
 .btn-group-toggle {

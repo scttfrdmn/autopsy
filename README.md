@@ -1,6 +1,6 @@
 # Autopsy
 
-[![Version](https://img.shields.io/badge/version-0.21.1-blue.svg)](https://github.com/scttfrdmn/autopsy/releases)
+[![Version](https://img.shields.io/badge/version-0.22.0-blue.svg)](https://github.com/scttfrdmn/autopsy/releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue.svg)](https://www.typescriptlang.org/)
 [![ESLint](https://img.shields.io/badge/ESLint-passing-brightgreen.svg)](eslint.config.js)
@@ -80,6 +80,7 @@ Identify resource-heavy tabs and processes
 
 - **Dark/Light themes** — Respects system preference or manual override
 - **Responsive width** — Small (600px), Medium (800px), Large (1000px)
+- **Resizable columns** — Drag column borders to adjust widths, persists across sessions
 - **Accessible design** — WCAG AA compliant with shape variants
 
 ---
@@ -135,7 +136,7 @@ Identify resource-heavy tabs and processes
 ### Chrome Web Store
 **[Install from Chrome Web Store →](https://chromewebstore.google.com/detail/autopsy/mmcbbcemljflnhgkfenmpcidehmaoihk)**
 
-*v0.21.1 update currently under review with improved screenshots and bug fixes.*
+*v0.22.0 adds resizable columns with drag handles between column headers.*
 
 ### Development Mode
 
@@ -176,11 +177,12 @@ Then load the `dist` folder as an unpacked extension. Vite will rebuild on chang
 1. Click the **Autopsy** icon in your Chrome toolbar
 2. View your tabs with real-time status indicators
 3. Click **column headers** to sort (Age, Status, Memory, etc.)
-4. Click a **row** to focus that tab
-5. Click the **×** button to close a tab
-6. Use **bulk operations** to manage multiple tabs at once
-7. **Group tabs** by domain, window, or status
-8. **Export data** to CSV or JSON for analysis
+4. **Drag column borders** to resize columns (Title, Age, Activity, Requests, Data)
+5. Click a **row** to focus that tab
+6. Click the **×** button to close a tab
+7. Use **bulk operations** to manage multiple tabs at once
+8. **Group tabs** by domain, window, or status
+9. **Export data** to CSV or JSON for analysis
 
 ---
 

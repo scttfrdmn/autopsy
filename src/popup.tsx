@@ -1,6 +1,37 @@
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect, useCallback } from 'preact/hooks';
 import type { TabMetrics, SortColumn, SortDirection, NetworkStats } from './types';
 import './popup.css';
+
+// Column width types
+interface ColumnWidths {
+  checkbox: number;
+  status: number;
+  title: number;
+  time: number;
+  timestamp: number;
+  requestCount: number;
+  bytesTransferred: number;
+}
+
+type ResizableColumn = 'title' | 'time' | 'timestamp' | 'requestCount' | 'bytesTransferred';
+
+const DEFAULT_COLUMN_WIDTHS: ColumnWidths = {
+  checkbox: 44,
+  status: 40,
+  title: 300,
+  time: 100,
+  timestamp: 120,
+  requestCount: 90,
+  bytesTransferred: 90
+};
+
+const MIN_COLUMN_WIDTHS: Partial<ColumnWidths> = {
+  title: 150,
+  time: 80,
+  timestamp: 100,
+  requestCount: 70,
+  bytesTransferred: 70
+};
 
 export function App() {
   const [tabs, setTabs] = useState<TabMetrics[]>([]);
@@ -21,15 +52,22 @@ export function App() {
   const [theme, setTheme] = useState<'dark' | 'light' | 'system'>('system');
   const [showHelp, setShowHelp] = useState(false);
   const [focusedTabId, setFocusedTabId] = useState<number | null>(null);
+  const [columnWidths, setColumnWidths] = useState<ColumnWidths>(DEFAULT_COLUMN_WIDTHS);
+  const [resizingColumn, setResizingColumn] = useState<ResizableColumn | null>(null);
+  const [resizeStartX, setResizeStartX] = useState(0);
+  const [resizeStartWidth, setResizeStartWidth] = useState(0);
 
   useEffect(() => {
     // Load saved preferences
-    chrome.storage.local.get(['popupWidth', 'theme']).then(result => {
+    chrome.storage.local.get(['popupWidth', 'theme', 'columnWidths']).then(result => {
       if (result.popupWidth) {
         setPopupWidth(result.popupWidth);
       }
       if (result.theme) {
         setTheme(result.theme);
+      }
+      if (result.columnWidths) {
+        setColumnWidths({ ...DEFAULT_COLUMN_WIDTHS, ...result.columnWidths });
       }
     });
 
@@ -801,6 +839,59 @@ export function App() {
     }, 0);
   };
 
+  // Column resize handlers
+  const handleResizeStart = (e: MouseEvent, column: ResizableColumn) => {
+    e.preventDefault();
+    e.stopPropagation(); // Prevent sort from triggering
+
+    setResizingColumn(column);
+    setResizeStartX(e.clientX);
+    setResizeStartWidth(columnWidths[column]);
+
+    document.body.classList.add('resizing-column');
+  };
+
+  const handleResizeMove = useCallback((e: MouseEvent) => {
+    if (!resizingColumn) return;
+
+    const delta = e.clientX - resizeStartX;
+    const newWidth = Math.max(
+      resizeStartWidth + delta,
+      MIN_COLUMN_WIDTHS[resizingColumn] || 0
+    );
+
+    setColumnWidths(prev => ({ ...prev, [resizingColumn]: newWidth }));
+  }, [resizingColumn, resizeStartX, resizeStartWidth]);
+
+  const handleResizeEnd = useCallback(() => {
+    if (!resizingColumn) return;
+
+    document.body.classList.remove('resizing-column');
+    chrome.storage.local.set({ columnWidths });
+
+    setResizingColumn(null);
+    setResizeStartX(0);
+    setResizeStartWidth(0);
+  }, [resizingColumn, columnWidths]);
+
+  const resetColumnWidths = () => {
+    setColumnWidths(DEFAULT_COLUMN_WIDTHS);
+    chrome.storage.local.set({ columnWidths: DEFAULT_COLUMN_WIDTHS });
+  };
+
+  // Add/remove global mouse event listeners for column resizing
+  useEffect(() => {
+    if (resizingColumn) {
+      document.addEventListener('mousemove', handleResizeMove);
+      document.addEventListener('mouseup', handleResizeEnd);
+
+      return () => {
+        document.removeEventListener('mousemove', handleResizeMove);
+        document.removeEventListener('mouseup', handleResizeEnd);
+      };
+    }
+  }, [resizingColumn, handleResizeMove, handleResizeEnd]);
+
   const renderTabRow = (tab: TabMetrics) => {
     const status = getActivityStatus(tab);
     const age = tab.created ? Date.now() - tab.created : null;
@@ -819,7 +910,7 @@ export function App() {
         role="row"
         aria-label={`${tab.title}, ${status}${isFocused ? ', focused' : ''}`}
       >
-        <td class="col-checkbox" onClick={e => e.stopPropagation()} role="cell">
+        <td class="col-checkbox" style={`width: ${columnWidths.checkbox}px`} onClick={e => e.stopPropagation()} role="cell">
           <input
             type="checkbox"
             checked={selectedTabs.has(tab.id)}
@@ -828,7 +919,7 @@ export function App() {
             aria-label={`Select ${tab.title}`}
           />
         </td>
-        <td class="col-status" role="cell">
+        <td class="col-status" style={`width: ${columnWidths.status}px`} role="cell">
           <div
             class={`status-indicator ${status}`}
             role="img"
@@ -844,7 +935,7 @@ export function App() {
             title={status}
           ></div>
         </td>
-        <td class="col-title">
+        <td class="col-title" style={`width: ${columnWidths.title}px`}>
           <div class="tab-info">
             {tab.favIconUrl && <img src={tab.favIconUrl} class="favicon" alt="" />}
             <div class="tab-text">
@@ -867,10 +958,10 @@ export function App() {
             </div>
           </div>
         </td>
-        <td class="col-time">{formatTime(age)}</td>
-        <td class="col-timestamp">{formatTimestamp(tab.networkActivity.lastActivity)}</td>
-        <td class="col-number">{tab.networkActivity.requestCount ?? 0}</td>
-        <td class="col-number">{formatBytes(tab.networkActivity.bytesReceived)}</td>
+        <td class="col-time" style={`width: ${columnWidths.time}px`}>{formatTime(age)}</td>
+        <td class="col-timestamp" style={`width: ${columnWidths.timestamp}px`}>{formatTimestamp(tab.networkActivity.lastActivity)}</td>
+        <td class="col-number" style={`width: ${columnWidths.requestCount}px`}>{tab.networkActivity.requestCount ?? 0}</td>
+        <td class="col-number" style={`width: ${columnWidths.bytesTransferred}px`}>{formatBytes(tab.networkActivity.bytesReceived)}</td>
       </tr>
     );
   };
@@ -956,7 +1047,7 @@ export function App() {
         <table class="tab-table" role="table">
           <thead>
             <tr>
-              <th class="col-checkbox">
+              <th class="col-checkbox" style={`width: ${columnWidths.checkbox}px`}>
                 <input
                   type="checkbox"
                   checked={sortedTabs.length > 0 && selectedTabs.size === sortedTabs.length}
@@ -968,45 +1059,86 @@ export function App() {
               </th>
               <th
                 class="col-status"
+                style={`width: ${columnWidths.status}px`}
                 title="Status indicator: circle=active, diamond=recent, square=idle, x=inactive"
               >
                 Status
               </th>
               <th
                 class="col-title"
+                style={`width: ${columnWidths.title}px`}
                 onClick={() => handleSort('title')}
                 title="Tab title and domain - click to sort"
               >
-                Tab {sortColumn === 'title' && (sortDirection === 'asc' ? '↑' : '↓')}
+                <div class="th-content">
+                  Tab {sortColumn === 'title' && (sortDirection === 'asc' ? '↑' : '↓')}
+                </div>
+                <div
+                  class={`column-resize-handle ${resizingColumn === 'title' ? 'resizing' : ''}`}
+                  onMouseDown={(e) => handleResizeStart(e, 'title')}
+                  aria-label="Resize column"
+                />
               </th>
               <th
                 class="col-time"
+                style={`width: ${columnWidths.time}px`}
                 onClick={() => handleSort('created')}
                 title="Time since tab was opened (persists across browser restarts)"
               >
-                Tab Age {sortColumn === 'created' && (sortDirection === 'asc' ? '↑' : '↓')}
+                <div class="th-content">
+                  Tab Age {sortColumn === 'created' && (sortDirection === 'asc' ? '↑' : '↓')}
+                </div>
+                <div
+                  class={`column-resize-handle ${resizingColumn === 'time' ? 'resizing' : ''}`}
+                  onMouseDown={(e) => handleResizeStart(e, 'time')}
+                  aria-label="Resize column"
+                />
               </th>
               <th
                 class="col-timestamp"
+                style={`width: ${columnWidths.timestamp}px`}
                 onClick={() => handleSort('networkActivity')}
                 title="Time since last network request - indicates tab activity"
               >
-                Last Activity{' '}
-                {sortColumn === 'networkActivity' && (sortDirection === 'asc' ? '↑' : '↓')}
+                <div class="th-content">
+                  Last Activity{' '}
+                  {sortColumn === 'networkActivity' && (sortDirection === 'asc' ? '↑' : '↓')}
+                </div>
+                <div
+                  class={`column-resize-handle ${resizingColumn === 'timestamp' ? 'resizing' : ''}`}
+                  onMouseDown={(e) => handleResizeStart(e, 'timestamp')}
+                  aria-label="Resize column"
+                />
               </th>
               <th
                 class="col-number"
+                style={`width: ${columnWidths.requestCount}px`}
                 onClick={() => handleSort('requestCount')}
                 title="Total network requests - high values may indicate background activity"
               >
-                Requests {sortColumn === 'requestCount' && (sortDirection === 'asc' ? '↑' : '↓')}
+                <div class="th-content">
+                  Requests {sortColumn === 'requestCount' && (sortDirection === 'asc' ? '↑' : '↓')}
+                </div>
+                <div
+                  class={`column-resize-handle ${resizingColumn === 'requestCount' ? 'resizing' : ''}`}
+                  onMouseDown={(e) => handleResizeStart(e, 'requestCount')}
+                  aria-label="Resize column"
+                />
               </th>
               <th
                 class="col-number"
+                style={`width: ${columnWidths.bytesTransferred}px`}
                 onClick={() => handleSort('bytesTransferred')}
                 title="Network data transferred - high values indicate resource-heavy tabs"
               >
-                Data {sortColumn === 'bytesTransferred' && (sortDirection === 'asc' ? '↑' : '↓')}
+                <div class="th-content">
+                  Data {sortColumn === 'bytesTransferred' && (sortDirection === 'asc' ? '↑' : '↓')}
+                </div>
+                <div
+                  class={`column-resize-handle ${resizingColumn === 'bytesTransferred' ? 'resizing' : ''}`}
+                  onMouseDown={(e) => handleResizeStart(e, 'bytesTransferred')}
+                  aria-label="Resize column"
+                />
               </th>
             </tr>
           </thead>
@@ -1216,6 +1348,15 @@ export function App() {
               title="Large (1000px)"
             >
               L
+            </button>
+            <span class="width-divider">|</span>
+            <button
+              class="btn-width"
+              onClick={resetColumnWidths}
+              aria-label="Reset column widths to defaults"
+              title="Reset column widths to defaults"
+            >
+              Reset Columns
             </button>
           </div>
           <div class="export-controls">

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Autopsy - Postmortem analysis for your browser tabs. Find what to close with real-time network tracking, smart status indicators, and bulk operations.">
+  <meta name="keywords" content="chrome extension, tab management, browser tabs, productivity, tab organizer">
+  <meta property="og:title" content="Autopsy - Postmortem Analysis for Your Tabs">
+  <meta property="og:description" content="Find what to close with real-time network tracking, smart status indicators, and bulk operations.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://autopsy.tools">
+  <title>Autopsy - Postmortem Analysis for Your Tabs</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" type="image/png" href="icon48.png">
+</head>
+<body>
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-content">
+        <div class="hero-icon">
+          <img src="icon128.png" alt="Autopsy Icon" width="128" height="128">
+        </div>
+        <h1>Autopsy</h1>
+        <p class="tagline">Postmortem analysis for your tabs<br>Find what to close</p>
+        <a href="#" class="cta-button primary" id="install-button">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M10 0C4.477 0 0 4.477 0 10s4.477 10 10 10 10-4.477 10-10S15.523 0 10 0zm4.707 8.707l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L9 9.586V4a1 1 0 112 0v5.586l2.293-2.293a1 1 0 011.414 1.414z"/>
+          </svg>
+          Add to Chrome
+        </a>
+        <p class="version">v0.21.1 • Free • Open Source</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="features">
+    <div class="container">
+      <h2>Smart Tab Management</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+            </svg>
+          </div>
+          <h3>Real-time Network Tracking</h3>
+          <p>See which tabs are actually active with live network monitoring. Know what's using resources right now.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+            </svg>
+          </div>
+          <h3>Smart Status Indicators</h3>
+          <p>Color-coded shapes distinguish Active, Recent, Idle, and Inactive tabs at a glance. Accessible and colorblind-friendly.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+            </svg>
+          </div>
+          <h3>Bulk Operations</h3>
+          <p>Select multiple tabs and close, pin, unpin, or move them together. Close duplicates with one click.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/>
+            </svg>
+          </div>
+          <h3>Track Tab Age</h3>
+          <p>See how long tabs have been open. Identify forgotten tabs taking up memory and mental space.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+            </svg>
+          </div>
+          <h3>Smart Grouping</h3>
+          <p>Group by domain, window, or status. Filter and search to find specific tabs instantly.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+            </svg>
+          </div>
+          <h3>Export Your Data</h3>
+          <p>Export tab data to CSV or JSON for analysis. Keep records of your browsing patterns.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Keyboard Navigation Section -->
+  <section class="keyboard-nav">
+    <div class="container">
+      <h2>⌨️ Full Keyboard Support</h2>
+      <p class="section-intro">Navigate and manage tabs without touching your mouse. Built for power users.</p>
+      <div class="keyboard-grid">
+        <div class="keyboard-shortcut">
+          <kbd>↑</kbd> <kbd>↓</kbd>
+          <span>Navigate between tabs</span>
+        </div>
+        <div class="keyboard-shortcut">
+          <kbd>Space</kbd>
+          <span>Toggle selection</span>
+        </div>
+        <div class="keyboard-shortcut">
+          <kbd>Enter</kbd>
+          <span>Switch to tab</span>
+        </div>
+        <div class="keyboard-shortcut">
+          <kbd>⌘</kbd> <kbd>F</kbd>
+          <span>Search tabs</span>
+        </div>
+        <div class="keyboard-shortcut">
+          <kbd>⌘</kbd> <kbd>A</kbd>
+          <span>Select all</span>
+        </div>
+        <div class="keyboard-shortcut">
+          <kbd>Delete</kbd>
+          <span>Close selected</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Screenshots Section -->
+  <section class="screenshots">
+    <div class="container">
+      <h2>See It In Action</h2>
+      <div class="screenshot-carousel">
+        <img src="screenshots/01-main-interface.png" alt="Autopsy main interface showing tab list with status indicators" loading="lazy">
+      </div>
+    </div>
+  </section>
+
+  <!-- Privacy & Open Source Section -->
+  <section class="trust">
+    <div class="container">
+      <div class="trust-grid">
+        <div class="trust-item">
+          <h3>🔒 Privacy First</h3>
+          <p>All data stays local. No tracking, no analytics, no data sent anywhere. Your tabs are your business.</p>
+        </div>
+        <div class="trust-item">
+          <h3>⚡ Lightweight</h3>
+          <p>Under 40KB. Minimal memory footprint. Won't slow down your browser.</p>
+        </div>
+        <div class="trust-item">
+          <h3>🔓 Open Source</h3>
+          <p>View the code on GitHub. Contribute, fork, or audit. Complete transparency.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="cta-section">
+    <div class="container">
+      <h2>Ready to examine your tabs?</h2>
+      <a href="#" class="cta-button primary large" id="install-button-bottom">
+        <svg width="24" height="24" viewBox="0 0 20 20" fill="currentColor">
+          <path d="M10 0C4.477 0 0 4.477 0 10s4.477 10 10 10 10-4.477 10-10S15.523 0 10 0zm4.707 8.707l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L9 9.586V4a1 1 0 112 0v5.586l2.293-2.293a1 1 0 011.414 1.414z"/>
+        </svg>
+        Add to Chrome - It's Free
+      </a>
+      <p class="cta-subtext">Available on Chrome Web Store</p>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-links">
+          <a href="https://github.com/scttfrdmn/autopsy" target="_blank" rel="noopener">GitHub</a>
+          <a href="https://github.com/scttfrdmn/autopsy/issues" target="_blank" rel="noopener">Report Issue</a>
+          <a href="https://github.com/scttfrdmn/autopsy/blob/main/README.md" target="_blank" rel="noopener">Documentation</a>
+        </div>
+        <p class="copyright">&copy; 2024 Autopsy. Open source under MIT License.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Update install buttons with Chrome Web Store URL when available
+    const chromeWebStoreUrl = 'https://chromewebstore.google.com/detail/autopsy/YOUR_EXTENSION_ID';
+    document.getElementById('install-button').href = chromeWebStoreUrl;
+    document.getElementById('install-button-bottom').href = chromeWebStoreUrl;
+  </script>
+</body>
+</html>

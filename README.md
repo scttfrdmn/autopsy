@@ -287,7 +287,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📧 Contact
 
-**Support:** autopsy.tabs@gmail.com
+**Support:** info@autopsy.tools
 **Issues:** [GitHub Issues](https://github.com/scttfrdmn/autopsy/issues)
 **Source:** [GitHub Repository](https://github.com/scttfrdmn/autopsy)
 

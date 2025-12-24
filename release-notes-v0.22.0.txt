@@ -1,0 +1,161 @@
+AUTOPSY v0.22.0 - CHROME WEB STORE RELEASE NOTES
+================================================
+
+VERSION: 0.22.0
+RELEASE DATE: December 23, 2024
+RELEASE TYPE: Feature Release
+
+---
+
+SHORT DESCRIPTION (132 characters max):
+Postmortem analysis for your tabs. Find what to close with real-time network tracking, bulk operations, and smart grouping.
+
+---
+
+DETAILED DESCRIPTION:
+
+🎯 NEW IN v0.22.0: RESIZABLE COLUMNS
+
+Adjust column widths to fit your workflow! Drag the borders between column headers to resize columns and see all your data without horizontal scrolling getting in the way.
+
+✨ What's New:
+• Drag column borders to adjust width (Title, Tab Age, Last Activity, Requests, Data)
+• Column widths persist across sessions - set it once, use it everywhere
+• Smart minimum widths prevent columns from becoming unusable
+• "Reset Columns" button to restore default widths
+• Horizontal scroll appears automatically if table exceeds popup width
+• Visual feedback with teal highlights on hover and during drag
+
+---
+
+FULL FEATURE SET:
+
+🔍 Smart Analysis
+• Real-time network activity tracking - monitor requests, bytes transferred, and timing
+• Intelligent status indicators with shape variants (Active ●, Recent ◆, Idle ■, Dead ✕)
+• Per-instance age tracking that persists across browser restarts
+• Memory usage insights to identify resource-heavy tabs
+
+🎯 Bulk Operations
+• Close duplicate tabs automatically (keeps newest)
+• Bulk pin/unpin multiple tabs at once
+• Select by domain with one click
+• Move selected tabs to new window
+• Select all with keyboard shortcut (Cmd/Ctrl+A)
+
+📊 Advanced Grouping
+• Group by domain - organize tabs by website
+• Group by window - see tabs per browser window
+• Group by status - view by activity level
+• Collapsible groups for clean organization
+
+⌨️ Full Keyboard Navigation
+• Arrow Up/Down - navigate between tabs
+• Space - toggle selection
+• Enter - activate/switch to tab
+• Escape - clear focus, search, then selection
+• Cmd/Ctrl+F - focus search
+• Cmd/Ctrl+A - select all visible tabs
+• Delete/Backspace - close selected tabs
+• ? - open help modal with shortcuts
+• WCAG 2.1 AA compliant focus indicators
+
+📁 Data Export
+• CSV export for spreadsheet analysis
+• JSON export for programmatic processing
+• Full metrics included (age, status, network stats, groups)
+
+🎨 Customization
+• Dark/Light themes (auto or manual)
+• Responsive width: Small (600px), Medium (800px), Large (1000px)
+• Resizable columns with persistent sizing
+• Accessible design with WCAG AA compliance
+
+⚡ Lightweight Design
+• Built with Preact (3KB vs React's 40KB)
+• Total extension size: <50KB
+• Minimal resource footprint
+• Efficient background service worker
+
+🔒 Privacy & Security
+• All data stays local on your device
+• No cloud sync, tracking, or telemetry
+• No external servers
+• Open source and fully auditable
+• No permissions abuse - only what's needed
+
+---
+
+WHAT'S CHANGED IN v0.22.0:
+
+✅ Added: Resizable table columns with drag handles
+✅ Added: Column width persistence across sessions
+✅ Added: "Reset Columns" button in footer controls
+✅ Added: Minimum width constraints for all resizable columns
+✅ Added: Hover indicators on column resize handles
+✅ Improved: Table layout to support custom column widths
+✅ Updated: Documentation with column resizing instructions
+✅ Updated: Screenshots to showcase new feature
+
+---
+
+TECHNICAL DETAILS:
+
+• Manifest Version: 3
+• Minimum Chrome Version: 88
+• Permissions: tabs, tabGroups, processes, storage, webRequest
+• Host Permissions: <all_urls> (for network monitoring)
+• Extension Size: ~37KB (zipped)
+
+---
+
+INSTALLATION & USAGE:
+
+1. Click "Add to Chrome" to install
+2. Click the Autopsy icon in your toolbar
+3. View tabs with real-time status indicators
+4. Drag column borders to resize columns to your preference
+5. Use bulk operations to manage multiple tabs
+6. Group tabs by domain, window, or status
+7. Export data to CSV or JSON for analysis
+
+---
+
+SUPPORT & FEEDBACK:
+
+• Report issues: https://github.com/scttfrdmn/autopsy/issues
+• Email support: info@autopsy.tools
+• Source code: https://github.com/scttfrdmn/autopsy
+• Website: https://autopsy.tools
+
+---
+
+LICENSE: MIT License
+OPEN SOURCE: https://github.com/scttfrdmn/autopsy
+
+---
+
+KEYWORDS:
+tab management, tab manager, tab organizer, productivity, browser tabs, tab groups, memory usage, network monitoring, bulk operations, keyboard shortcuts, accessibility, WCAG, open source, privacy-focused, resizable columns
+
+---
+
+PROMOTIONAL TEXT (short):
+
+Find what to close with surgical precision. Autopsy provides real-time network tracking, smart status indicators, and powerful bulk operations to help you manage browser tabs efficiently. Now with resizable columns to fit your workflow!
+
+Features:
+✓ Real-time activity tracking
+✓ Smart status indicators
+✓ Resizable columns (NEW!)
+✓ Bulk operations
+✓ Keyboard navigation
+✓ Privacy-focused (all data stays local)
+✓ Lightweight (<50KB)
+✓ Open source
+
+Perfect for power users who keep many tabs open and need intelligent tools to manage them.
+
+---
+
+END OF RELEASE NOTES

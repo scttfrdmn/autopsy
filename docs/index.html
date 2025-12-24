@@ -140,9 +140,51 @@
   <section class="screenshots">
     <div class="container">
       <h2>See It In Action</h2>
-      <div class="screenshot-carousel">
-        <img src="screenshots/01-main-interface.png" alt="Autopsy main interface showing tab list with status indicators" loading="lazy">
+      <div class="carousel">
+        <button class="carousel-btn carousel-prev" aria-label="Previous screenshot">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+          </svg>
+        </button>
+        <div class="carousel-container">
+          <div class="carousel-track">
+            <div class="carousel-slide">
+              <img src="screenshots/01-main-interface.png" alt="Main interface with status indicators and tab list" loading="lazy">
+              <p class="carousel-caption">Main Interface</p>
+            </div>
+            <div class="carousel-slide">
+              <img src="screenshots/02-keyboard-navigation.png" alt="Keyboard navigation with focus indicators" loading="lazy">
+              <p class="carousel-caption">Keyboard Navigation</p>
+            </div>
+            <div class="carousel-slide">
+              <img src="screenshots/03-help-keyboard-shortcuts.png" alt="Help modal showing all keyboard shortcuts" loading="lazy">
+              <p class="carousel-caption">Keyboard Shortcuts</p>
+            </div>
+            <div class="carousel-slide">
+              <img src="screenshots/04-group-by-domain.png" alt="Tabs grouped by domain" loading="lazy">
+              <p class="carousel-caption">Group by Domain</p>
+            </div>
+            <div class="carousel-slide">
+              <img src="screenshots/05-group-by-status.png" alt="Tabs grouped by status" loading="lazy">
+              <p class="carousel-caption">Group by Status</p>
+            </div>
+            <div class="carousel-slide">
+              <img src="screenshots/06-bulk-operations.png" alt="Bulk operations with multiple tabs selected" loading="lazy">
+              <p class="carousel-caption">Bulk Operations</p>
+            </div>
+            <div class="carousel-slide">
+              <img src="screenshots/07-light-theme.png" alt="Light theme with WCAG AA compliant contrast" loading="lazy">
+              <p class="carousel-caption">Light Theme</p>
+            </div>
+          </div>
+        </div>
+        <button class="carousel-btn carousel-next" aria-label="Next screenshot">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+          </svg>
+        </button>
       </div>
+      <div class="carousel-dots"></div>
     </div>
   </section>
 
@@ -189,7 +231,7 @@
           <a href="https://github.com/scttfrdmn/autopsy/issues" target="_blank" rel="noopener">Report Issue</a>
           <a href="https://github.com/scttfrdmn/autopsy/blob/main/README.md" target="_blank" rel="noopener">Documentation</a>
         </div>
-        <p class="copyright">&copy; 2024 Autopsy. Open source under MIT License.</p>
+        <p class="copyright">&copy; 2025 Scott Friedman. Open source under MIT License.</p>
       </div>
     </div>
   </footer>
@@ -199,6 +241,111 @@
     const chromeWebStoreUrl = 'https://chromewebstore.google.com/detail/autopsy/YOUR_EXTENSION_ID';
     document.getElementById('install-button').href = chromeWebStoreUrl;
     document.getElementById('install-button-bottom').href = chromeWebStoreUrl;
+
+    // Carousel functionality
+    const track = document.querySelector('.carousel-track');
+    const slides = Array.from(track.children);
+    const nextButton = document.querySelector('.carousel-next');
+    const prevButton = document.querySelector('.carousel-prev');
+    const dotsContainer = document.querySelector('.carousel-dots');
+
+    let currentSlide = 0;
+    const totalSlides = slides.length;
+
+    // Create dots
+    slides.forEach((_, index) => {
+      const dot = document.createElement('button');
+      dot.classList.add('carousel-dot');
+      if (index === 0) dot.classList.add('active');
+      dot.setAttribute('aria-label', `Go to screenshot ${index + 1}`);
+      dot.addEventListener('click', () => goToSlide(index));
+      dotsContainer.appendChild(dot);
+    });
+
+    const dots = Array.from(dotsContainer.children);
+
+    function updateCarousel() {
+      track.style.transform = `translateX(-${currentSlide * 100}%)`;
+
+      // Update dots
+      dots.forEach((dot, index) => {
+        dot.classList.toggle('active', index === currentSlide);
+      });
+
+      // Update button states
+      prevButton.disabled = currentSlide === 0;
+      nextButton.disabled = currentSlide === totalSlides - 1;
+    }
+
+    function goToSlide(index) {
+      currentSlide = index;
+      updateCarousel();
+    }
+
+    function nextSlide() {
+      if (currentSlide < totalSlides - 1) {
+        currentSlide++;
+        updateCarousel();
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlide > 0) {
+        currentSlide--;
+        updateCarousel();
+      }
+    }
+
+    nextButton.addEventListener('click', nextSlide);
+    prevButton.addEventListener('click', prevSlide);
+
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowLeft') prevSlide();
+      if (e.key === 'ArrowRight') nextSlide();
+    });
+
+    // Touch swipe support
+    let touchStartX = 0;
+    let touchEndX = 0;
+
+    track.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+    });
+
+    track.addEventListener('touchend', (e) => {
+      touchEndX = e.changedTouches[0].screenX;
+      handleSwipe();
+    });
+
+    function handleSwipe() {
+      if (touchStartX - touchEndX > 50) nextSlide();
+      if (touchEndX - touchStartX > 50) prevSlide();
+    }
+
+    // Auto-advance carousel every 5 seconds
+    let autoplayInterval = setInterval(nextSlide, 5000);
+
+    // Pause autoplay on hover
+    const carousel = document.querySelector('.carousel');
+    carousel.addEventListener('mouseenter', () => {
+      clearInterval(autoplayInterval);
+    });
+
+    carousel.addEventListener('mouseleave', () => {
+      autoplayInterval = setInterval(nextSlide, 5000);
+    });
+
+    // Loop carousel
+    nextButton.addEventListener('click', () => {
+      if (currentSlide === totalSlides - 1) {
+        currentSlide = 0;
+        updateCarousel();
+      }
+    });
+
+    // Initial state
+    updateCarousel();
   </script>
 </body>
 </html>

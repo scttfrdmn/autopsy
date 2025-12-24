@@ -263,11 +263,101 @@ kbd {
   font-weight: 700;
 }
 
-.screenshot-carousel img {
-  max-width: 100%;
+/* Carousel */
+.carousel {
+  position: relative;
+  max-width: 1000px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.carousel-container {
+  flex: 1;
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+.carousel-track {
+  display: flex;
+  transition: transform 0.5s ease-in-out;
+}
+
+.carousel-slide {
+  min-width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.carousel-slide img {
+  width: 100%;
   border-radius: 12px;
   box-shadow: var(--shadow-large);
   border: 1px solid var(--border);
+}
+
+.carousel-caption {
+  font-size: 16px;
+  color: var(--text-muted);
+  font-weight: 500;
+  margin-top: 8px;
+}
+
+.carousel-btn {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.carousel-btn:hover:not(:disabled) {
+  background: var(--accent);
+  border-color: var(--accent);
+  transform: scale(1.1);
+}
+
+.carousel-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.carousel-dots {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 32px;
+}
+
+.carousel-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--border);
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s;
+  padding: 0;
+}
+
+.carousel-dot:hover {
+  background: var(--text-muted);
+  transform: scale(1.2);
+}
+
+.carousel-dot.active {
+  background: var(--primary);
+  width: 32px;
+  border-radius: 6px;
 }
 
 /* Trust Section */
@@ -379,6 +469,20 @@ footer {
   .cta-button.large {
     padding: 16px 32px;
     font-size: 18px;
+  }
+
+  .carousel {
+    gap: 16px;
+  }
+
+  .carousel-btn {
+    width: 40px;
+    height: 40px;
+  }
+
+  .carousel-btn svg {
+    width: 20px;
+    height: 20px;
   }
 }
 

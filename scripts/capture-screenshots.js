@@ -2,13 +2,13 @@
 
 /**
  * Capture Chrome Web Store screenshots using Playwright
- * Updated for v0.21.0 with keyboard navigation features
+ * Updated for v0.22.0 with column resizing feature
  *
  * This script:
  * 1. Launches Chrome with Autopsy extension loaded
  * 2. Creates test tabs with various characteristics
  * 3. Opens extension popup
- * 4. Captures screenshots of different features including new keyboard navigation
+ * 4. Captures screenshots of different features including column resizing
  */
 
 import { chromium } from 'playwright';
@@ -51,7 +51,7 @@ async function wait(ms) {
 }
 
 async function main() {
-  console.log('🚀 Starting screenshot capture for v0.21.0...\n');
+  console.log('🚀 Starting screenshot capture for v0.22.0...\n');
 
   // Launch browser with extension
   console.log('📦 Loading extension from:', distPath);
@@ -452,20 +452,75 @@ async function main() {
   });
   console.log('   ✓ Saved: 07-light-theme.png');
 
+  // Screenshot 8: Column Resizing (NEW for v0.22.0)
+  console.log('\n📸 Screenshot 8: Column Resizing (NEW)...');
+  const popup8 = await context.newPage();
+  await popup8.goto(popupUrl);
+  await wait(2000);
+
+  // Set to large width
+  try {
+    await popup8.click('[aria-label="Set large width"]', { timeout: 5000 });
+    await wait(500);
+  } catch (e) {
+    console.log('   ⚠ Could not set width, continuing...');
+  }
+
+  // Resize some columns to make it obvious
+  try {
+    // Get the Title column header
+    const titleHeader = await popup8.$('th.col-title');
+    if (titleHeader) {
+      const bbox = await titleHeader.boundingBox();
+      // Move to the right edge of the Title column (where the resize handle is)
+      await popup8.mouse.move(bbox.x + bbox.width - 2, bbox.y + bbox.height / 2);
+      await wait(500); // Wait for hover effect to show
+      // Drag to make it wider
+      await popup8.mouse.down();
+      await popup8.mouse.move(bbox.x + bbox.width + 100, bbox.y + bbox.height / 2, { steps: 10 });
+      await wait(300);
+      await popup8.mouse.up();
+      await wait(500);
+    }
+  } catch (e) {
+    console.log('   ⚠ Could not resize column, showing default view...');
+  }
+
+  // Hover over another resize handle to show the indicator
+  try {
+    const timeHeader = await popup8.$('th.col-time');
+    if (timeHeader) {
+      const bbox = await timeHeader.boundingBox();
+      await popup8.mouse.move(bbox.x + bbox.width - 2, bbox.y + bbox.height / 2);
+      await wait(500); // Wait for hover effect to show
+    }
+  } catch (e) {
+    console.log('   ⚠ Could not hover over resize handle, continuing...');
+  }
+
+  // Capture just the extension popup
+  const appElement8 = await popup8.$('.app');
+  await appElement8.screenshot({
+    path: join(screenshotsPath, '08-column-resizing.png'),
+  });
+  console.log('   ✓ Saved: 08-column-resizing.png');
+
   console.log('\n✅ All screenshots captured successfully!');
   console.log(`📁 Screenshots saved to: ${screenshotsPath}`);
-  console.log('\n📝 v0.21.0 Screenshots:');
-  console.log('   01 - Main Interface (updated)');
-  console.log('   02 - Keyboard Navigation (NEW - shows focus indicator)');
-  console.log('   03 - Help Modal with Keyboard Shortcuts (NEW)');
-  console.log('   04 - Group by Domain (updated)');
-  console.log('   05 - Group by Status (updated)');
-  console.log('   06 - Bulk Operations (updated)');
-  console.log('   07 - Light Theme (updated with improved contrast)');
+  console.log('\n📝 v0.22.0 Screenshots:');
+  console.log('   01 - Main Interface (updated with Reset Columns button)');
+  console.log('   02 - Keyboard Navigation');
+  console.log('   03 - Help Modal with Keyboard Shortcuts');
+  console.log('   04 - Group by Domain');
+  console.log('   05 - Group by Status');
+  console.log('   06 - Bulk Operations');
+  console.log('   07 - Light Theme');
+  console.log('   08 - Column Resizing (NEW - shows resize handles and custom widths)');
   console.log('\n📝 Next steps:');
   console.log('   1. Review screenshots in screenshots/ folder');
   console.log('   2. All should be 1280x800 (Chrome Web Store requirement)');
   console.log('   3. Upload to Chrome Web Store');
+  console.log('   4. Copy to assets/ folder if needed');
 
   // Close browser
   await wait(2000);

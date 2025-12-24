@@ -127,6 +127,10 @@ Identify resource-heavy tabs and processes
 ![Light Theme](screenshots/07-light-theme.png)
 *WCAG AA compliant light theme with improved contrast*
 
+### Column Resizing
+![Column Resizing](screenshots/08-column-resizing.png)
+*Drag column borders to adjust widths with hover indicators and persistent sizing*
+
 </details>
 
 ---

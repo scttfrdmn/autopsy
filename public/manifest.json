@@ -1,12 +1,11 @@
 {
   "manifest_version": 3,
   "name": "Autopsy",
-  "version": "0.21.2",
+  "version": "0.22.0",
   "description": "Postmortem analysis for your tabs. Find what to close with real-time network tracking, bulk operations, and smart grouping.",
   "permissions": [
     "tabs",
     "tabGroups",
-    "processes",
     "storage",
     "webRequest"
   ],

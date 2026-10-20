@@ -74,13 +74,12 @@ Help users review their open tabs (age, last viewed, network activity) and close
 - **Minimum Chrome version:** 121 (set in the manifest)
 - **Visibility:** Public · **Distribution:** All regions · **Pricing:** Free
 
-## Screenshots (upload in order)
+## Screenshots (upload in order; the store allows five)
 
 1. `01-main-interface.png`: main table, sorted stalest first
 2. `06-bulk-operations.png`: stale tabs selected, with the selection bar
 3. `05-group-by-status.png`: grouped by status
-4. `04-group-by-domain.png`: grouped by site
-5. `02-keyboard-navigation.png`: keyboard focus and selection
-6. `03-help-keyboard-shortcuts.png`: help dialog
-7. `08-settings-menu.png`: settings and export menu
-8. `07-light-theme.png`: light theme
+4. `03-help-keyboard-shortcuts.png`: help dialog (status legend, columns, shortcuts)
+5. `07-light-theme.png`: light theme
+
+`02`, `04` and `08` are used on the website and in the README only.

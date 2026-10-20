@@ -18,15 +18,14 @@ These IDs are in `scripts/cws.config.json`.
 
 1. **Version.** Bump `version` in **both** `package.json` and `public/manifest.json` (semver). The store rejects a version that isn't higher than the published one.
 2. **Changelog.** Add a `## [x.y.z] - YYYY-MM-DD` section at the top of `CHANGELOG.md` and a link at the bottom.
-3. **Docs.** Update the version badge in `README.md` and the version line in `docs/index.html`. If features changed, update `README.md`, `STORE_LISTING.md` and, when permissions or storage changed, `PRIVACY.md`.
+3. **Docs.** Update the version badge in `README.md` and the "New in x.y" pill in `docs/index.html`. If features changed, update `README.md`, `STORE_LISTING.md` and, when permissions or storage changed, `PRIVACY.md`.
 4. **Check.**
    ```bash
    npm run lint && npm test && npm run test:e2e
    ```
 5. **Screenshots** (only if the UI changed):
    ```bash
-   npm run screenshots          # → screenshots/
-   cp screenshots/*.png docs/screenshots/
+   npm run screenshots          # → screenshots/ (store, 1280×800) and docs/img/ (website, 2×)
    npm run promo                # only if assets/promo-*.html changed
    ```
 6. **Package.**

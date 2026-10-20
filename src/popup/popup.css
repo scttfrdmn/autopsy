@@ -17,7 +17,7 @@
   --accent: #00d9a3;
   --accent-text: #04140f;
   --danger: #ff6b6b;
-  --danger-bg: #d64545;
+  --danger-bg: #c93c3c; /* white text 5.0:1 */
   --warn: #ffb84d;
 
   --status-active: #00d9a3;
@@ -47,7 +47,7 @@
   --text-2: #464d57;
   --text-3: #5c636f; /* 6.08:1 on --bg */
 
-  --accent: #00866a;
+  --accent: #007a60; /* 5.0:1 on --bg */
   --accent-text: #ffffff;
   --danger: #c92a2a;
   --danger-bg: #c92a2a;

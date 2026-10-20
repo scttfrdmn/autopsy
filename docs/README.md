@@ -52,6 +52,10 @@ This directory contains the landing page for autopsy.tools, hosted via GitHub Pa
    - Once DNS is configured, GitHub will offer HTTPS option
    - Check "Enforce HTTPS" in Settings → Pages
 
+## Images
+
+`img/popup-*.png` are 2× popup captures written by `npm run screenshots`; `img/og.png` is the social preview (a copy of `assets/promo-marquee-1400x560.png`).
+
 ## Chrome Web Store link
 
 Both install buttons in `index.html` link to the store listing for extension ID `fmlkjcobafbejgpkjkcgbhfgnlpdkegn` (the ID in the Developer Dashboard URL, also in `scripts/cws.config.json`).
@@ -74,12 +78,11 @@ python -m http.server 8000
 
 ```
 docs/
-├── index.html          # Main landing page
-├── style.css           # Styles
-├── icon48.png          # Favicon
-├── icon128.png         # Hero icon
+├── index.html          # The landing page (static, no JavaScript)
+├── style.css           # Styles (system fonts, no external requests)
+├── icon48.png          # Favicon and nav logo
+├── icon128.png         # Larger icon
 ├── CNAME               # Custom domain config
-├── screenshots/        # Screenshots for carousel
-│   └── 01-main-interface.png
+├── img/                # popup-*.png (2x captures) and og.png (social preview)
 └── README.md          # This file
 ```

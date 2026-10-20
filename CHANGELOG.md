@@ -2,6 +2,19 @@
 
 All notable changes to Autopsy. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Fixed
+- Two colour pairs below WCAG AA: accent links in the light theme (4.3:1, now 5.0:1) and the red Close button in the dark theme (4.4:1, now 5.0:1).
+
+### Website
+- Rebuilt autopsy.tools:
+  - Large product shots and a status legend.
+  - How it works, and how tab age is tracked.
+  - Privacy facts and an FAQ, including what the "read and change all your data" warning means.
+  - Fixed keyboard-shortcut layout, an accurate footer and a social preview image.
+  - No JavaScript and no external requests.
+
 ## [0.23.0] - 2026-10-19
 
 A rework of how Autopsy measures tabs, a redesigned popup, and a sweep of bug fixes.

@@ -2,368 +2,256 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Autopsy - Postmortem analysis for your browser tabs. Find what to close with real-time network tracking, smart status indicators, and bulk operations.">
-  <meta name="keywords" content="chrome extension, tab management, browser tabs, productivity, tab organizer">
-  <meta property="og:title" content="Autopsy - Postmortem Analysis for Your Tabs">
-  <meta property="og:description" content="Find what to close with real-time network tracking, smart status indicators, and bulk operations.">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Autopsy: find the tabs you forgot · Chrome extension</title>
+  <meta name="description" content="Autopsy is a free Chrome extension that shows how long every tab has been open, when you last looked at it, and which ones are still busy in the background, then closes the ones you don't need, with undo.">
+  <link rel="canonical" href="https://autopsy.tools/">
+  <meta name="theme-color" content="#0b0f15">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://autopsy.tools">
-  <title>Autopsy - Postmortem Analysis for Your Tabs</title>
-  <link rel="stylesheet" href="style.css">
+  <meta property="og:url" content="https://autopsy.tools/">
+  <meta property="og:title" content="Autopsy: find the tabs you forgot">
+  <meta property="og:description" content="See how old and how stale every tab is, then close what you don't need, with undo. Free, open source, and nothing leaves your browser.">
+  <meta property="og:image" content="https://autopsy.tools/img/og.png">
+  <meta property="og:image:width" content="1400">
+  <meta property="og:image:height" content="560">
+  <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" type="image/png" href="icon48.png">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- Hero Section -->
-  <section class="hero">
-    <div class="container">
-      <div class="hero-content">
-        <div class="hero-icon">
-          <img src="icon128.png" alt="Autopsy Icon" width="128" height="128">
-        </div>
-        <h1>Autopsy</h1>
-        <p class="tagline">Postmortem analysis for your tabs<br>Find what to close</p>
-        <a href="https://chromewebstore.google.com/detail/autopsy/fmlkjcobafbejgpkjkcgbhfgnlpdkegn" class="cta-button primary" id="install-button">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-            <path d="M10 0C4.477 0 0 4.477 0 10s4.477 10 10 10 10-4.477 10-10S15.523 0 10 0zm4.707 8.707l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L9 9.586V4a1 1 0 112 0v5.586l2.293-2.293a1 1 0 011.414 1.414z"/>
-          </svg>
-          Add to Chrome
-        </a>
-        <p class="version">v0.23.0 • Free • Open Source</p>
-      </div>
-    </div>
-  </section>
+  <a class="skip" href="#main">Skip to content</a>
 
-  <!-- Features Section -->
-  <section class="features">
-    <div class="container">
-      <h2>Smart Tab Management</h2>
-      <div class="features-grid">
-        <div class="feature-card">
-          <div class="feature-icon">
-            <svg viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
-            </svg>
-          </div>
-          <h3>Know What's Stale</h3>
-          <p>See when you last looked at every tab. Tabs you haven't viewed in a day are flagged stale, and background tabs still busy on the network are called out.</p>
-        </div>
-
-        <div class="feature-card">
-          <div class="feature-icon">
-            <svg viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-            </svg>
-          </div>
-          <h3>Smart Status Indicators</h3>
-          <p>Distinct shapes and colours mark Active, Recent, Idle and Stale tabs at a glance, so status never relies on colour alone.</p>
-        </div>
-
-        <div class="feature-card">
-          <div class="feature-icon">
-            <svg viewBox="0 0 24 24" fill="currentColor">
-              <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-            </svg>
-          </div>
-          <h3>Bulk Operations</h3>
-          <p>Select tabs to close, pin, unpin or move them together. Close duplicates in one click. Every close can be undone, and pinned tabs are protected.</p>
-        </div>
-
-        <div class="feature-card">
-          <div class="feature-icon">
-            <svg viewBox="0 0 24 24" fill="currentColor">
-              <path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/>
-            </svg>
-          </div>
-          <h3>Track Tab Age</h3>
-          <p>See how long each tab has been open, carried across browser restarts. Find the forgotten tabs taking up memory and mental space.</p>
-        </div>
-
-        <div class="feature-card">
-          <div class="feature-icon">
-            <svg viewBox="0 0 24 24" fill="currentColor">
-              <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
-            </svg>
-          </div>
-          <h3>Smart Grouping</h3>
-          <p>Group by domain, window, or status. Filter and search to find specific tabs instantly.</p>
-        </div>
-
-        <div class="feature-card">
-          <div class="feature-icon">
-            <svg viewBox="0 0 24 24" fill="currentColor">
-              <path d="M3 3v18h18V3H3zm16 16H5V5h14v14zM11 7h2v2h-2V7zm0 4h2v2h-2v-2zm0 4h2v2h-2v-2z"/>
-            </svg>
-          </div>
-          <h3>Resizable Columns</h3>
-          <p>Drag column borders to adjust widths. Custom sizes persist across sessions with one-click reset.</p>
-        </div>
-
-        <div class="feature-card">
-          <div class="feature-icon">
-            <svg viewBox="0 0 24 24" fill="currentColor">
-              <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
-            </svg>
-          </div>
-          <h3>Export Your Data</h3>
-          <p>Export tab data to CSV or JSON for analysis. Keep records of your browsing patterns.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Keyboard Navigation Section -->
-  <section class="keyboard-nav">
-    <div class="container">
-      <h2>⌨️ Full Keyboard Support</h2>
-      <p class="section-intro">Navigate and manage tabs without touching your mouse. Built for power users.</p>
-      <div class="keyboard-grid">
-        <div class="keyboard-shortcut">
-          <kbd>↑</kbd> <kbd>↓</kbd>
-          <span>Navigate between tabs</span>
-        </div>
-        <div class="keyboard-shortcut">
-          <kbd>Space</kbd>
-          <span>Toggle selection</span>
-        </div>
-        <div class="keyboard-shortcut">
-          <kbd>Enter</kbd>
-          <span>Switch to tab</span>
-        </div>
-        <div class="keyboard-shortcut">
-          <kbd>⌘</kbd> <kbd>F</kbd>
-          <span>Search tabs</span>
-        </div>
-        <div class="keyboard-shortcut">
-          <kbd>⌘</kbd> <kbd>A</kbd>
-          <span>Select all</span>
-        </div>
-        <div class="keyboard-shortcut">
-          <kbd>Delete</kbd>
-          <span>Close selected</span>
-        </div>
-        <div class="keyboard-shortcut">
-          <kbd>⌘</kbd> <kbd>Z</kbd>
-          <span>Undo close</span>
-        </div>
-        <div class="keyboard-shortcut">
-          <kbd>?</kbd>
-          <span>Show help</span>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Screenshots Section -->
-  <section class="screenshots">
-    <div class="container">
-      <h2>See It In Action</h2>
-      <div class="carousel">
-        <button class="carousel-btn carousel-prev" aria-label="Previous screenshot">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
-          </svg>
-        </button>
-        <div class="carousel-container">
-          <div class="carousel-track">
-            <div class="carousel-slide">
-              <img src="screenshots/01-main-interface.png" alt="Main interface with status indicators and tab list" loading="lazy">
-              <p class="carousel-caption">Main Interface</p>
-            </div>
-            <div class="carousel-slide">
-              <img src="screenshots/02-keyboard-navigation.png" alt="Keyboard navigation with focus indicators" loading="lazy">
-              <p class="carousel-caption">Keyboard Navigation</p>
-            </div>
-            <div class="carousel-slide">
-              <img src="screenshots/03-help-keyboard-shortcuts.png" alt="Help modal showing all keyboard shortcuts" loading="lazy">
-              <p class="carousel-caption">Keyboard Shortcuts</p>
-            </div>
-            <div class="carousel-slide">
-              <img src="screenshots/04-group-by-domain.png" alt="Tabs grouped by domain" loading="lazy">
-              <p class="carousel-caption">Group by Domain</p>
-            </div>
-            <div class="carousel-slide">
-              <img src="screenshots/05-group-by-status.png" alt="Tabs grouped by status" loading="lazy">
-              <p class="carousel-caption">Group by Status</p>
-            </div>
-            <div class="carousel-slide">
-              <img src="screenshots/06-bulk-operations.png" alt="Bulk operations with multiple tabs selected" loading="lazy">
-              <p class="carousel-caption">Bulk Operations</p>
-            </div>
-            <div class="carousel-slide">
-              <img src="screenshots/07-light-theme.png" alt="Light theme with WCAG AA compliant contrast" loading="lazy">
-              <p class="carousel-caption">Light Theme</p>
-            </div>
-            <div class="carousel-slide">
-              <img src="screenshots/08-settings-menu.png" alt="Settings menu with theme, width, pinned-tab protection and export" loading="lazy">
-              <p class="carousel-caption">Settings &amp; Export</p>
-            </div>
-          </div>
-        </div>
-        <button class="carousel-btn carousel-next" aria-label="Next screenshot">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
-          </svg>
-        </button>
-      </div>
-      <div class="carousel-dots"></div>
-    </div>
-  </section>
-
-  <!-- Privacy & Open Source Section -->
-  <section class="trust">
-    <div class="container">
-      <div class="trust-grid">
-        <div class="trust-item">
-          <h3>🔒 Privacy First</h3>
-          <p>All data stays local. No tracking, no analytics, no data sent anywhere. Your tabs are your business.</p>
-        </div>
-        <div class="trust-item">
-          <h3>⚡ Lightweight</h3>
-          <p>About a 40KB download, built on Preact, with no external requests. Won&#39;t slow down your browser.</p>
-        </div>
-        <div class="trust-item">
-          <h3>🔓 Open Source</h3>
-          <p>View the code on GitHub. Contribute, fork, or audit. Complete transparency.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- CTA Section -->
-  <section class="cta-section">
-    <div class="container">
-      <h2>Ready to examine your tabs?</h2>
-      <a href="https://chromewebstore.google.com/detail/autopsy/fmlkjcobafbejgpkjkcgbhfgnlpdkegn" class="cta-button primary large" id="install-button-bottom">
-        <svg width="24" height="24" viewBox="0 0 20 20" fill="currentColor">
-          <path d="M10 0C4.477 0 0 4.477 0 10s4.477 10 10 10 10-4.477 10-10S15.523 0 10 0zm4.707 8.707l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L9 9.586V4a1 1 0 112 0v5.586l2.293-2.293a1 1 0 011.414 1.414z"/>
-        </svg>
-        Add to Chrome - It's Free
+  <header class="nav">
+    <div class="wrap nav-inner">
+      <a class="brand" href="#top" aria-label="Autopsy home">
+        <img src="icon48.png" alt="" width="28" height="28">
+        Autopsy
       </a>
-      <p class="cta-subtext">Available on Chrome Web Store</p>
+      <nav aria-label="Sections">
+        <a href="#how">How it works</a>
+        <a href="#age">Tab age</a>
+        <a href="#privacy">Privacy</a>
+        <a href="#faq">FAQ</a>
+        <a href="https://github.com/scttfrdmn/autopsy">GitHub</a>
+      </nav>
+      <a class="btn btn-small" href="https://chromewebstore.google.com/detail/autopsy/fmlkjcobafbejgpkjkcgbhfgnlpdkegn">Add to Chrome</a>
     </div>
-  </section>
+  </header>
 
-  <!-- Footer -->
-  <footer>
-    <div class="container">
-      <div class="footer-content">
-        <div class="footer-links">
-          <a href="https://github.com/scttfrdmn/autopsy" target="_blank" rel="noopener">GitHub</a>
-          <a href="https://github.com/scttfrdmn/autopsy/issues" target="_blank" rel="noopener">Report Issue</a>
-          <a href="https://github.com/scttfrdmn/autopsy/blob/main/README.md" target="_blank" rel="noopener">Documentation</a>
+  <main id="main">
+    <section class="hero" id="top">
+      <div class="wrap hero-inner">
+        <div class="hero-copy">
+          <a class="pill" href="https://github.com/scttfrdmn/autopsy/blob/main/CHANGELOG.md">New in 0.23: honest tab ages, a calmer popup, undo for everything →</a>
+          <h1>Find the tabs<br>you forgot.</h1>
+          <p class="lede">Autopsy shows how long every tab has been open, when you last looked at it, and which ones are still busy in the background. Then it helps you close the ones you don't need, with undo.</p>
+          <div class="actions">
+            <a class="btn" href="https://chromewebstore.google.com/detail/autopsy/fmlkjcobafbejgpkjkcgbhfgnlpdkegn">Add to Chrome, it's free</a>
+            <a class="btn btn-ghost" href="https://github.com/scttfrdmn/autopsy">View source</a>
+          </div>
+          <p class="fineprint">Chrome 121+ · Open source (MIT) · Nothing leaves your browser</p>
         </div>
-        <p class="copyright">&copy; 2025 Scott Friedman. Open source under MIT License.</p>
+        <figure class="hero-shot">
+          <img src="img/popup-01-main-interface.png" width="800" height="600"
+            alt="The Autopsy popup: a table of open tabs sorted stalest first, with status, age, last viewed, network activity and data columns">
+        </figure>
       </div>
+    </section>
+
+    <section class="legend-band" aria-label="Status legend">
+      <div class="wrap legend">
+        <div><span class="s s-active"></span><strong>Active</strong><span>showing, or viewed in the last 10 min</span></div>
+        <div><span class="s s-recent"></span><strong>Recent</strong><span>viewed in the last hour</span></div>
+        <div><span class="s s-idle"></span><strong>Idle</strong><span>viewed in the last day</span></div>
+        <div><span class="s s-stale"></span><strong>Stale</strong><span>not viewed for over a day</span></div>
+        <div><span class="s s-busy"></span><strong>Busy</strong><span>still making requests in the background</span></div>
+      </div>
+    </section>
+
+    <section class="section" id="how">
+      <div class="wrap">
+        <h2>Three clicks to a lighter browser</h2>
+        <ol class="steps">
+          <li>
+            <span class="step-n">1</span>
+            <h3>Look</h3>
+            <p>Open Autopsy and your tabs are listed stalest first. Each one shows its age, when you last viewed it, and its network activity.</p>
+          </li>
+          <li>
+            <span class="step-n">2</span>
+            <h3>Select</h3>
+            <p>Click <em>Select 8 stale</em> or <em>Close 3 duplicates</em>, or filter by age and status. Pinned tabs and tabs hidden by filters are never included.</p>
+          </li>
+          <li>
+            <span class="step-n">3</span>
+            <h3>Close, and undo if you need to</h3>
+            <p>Every close can be undone for a few seconds. Undo reopens tabs in their original window and position.</p>
+          </li>
+        </ol>
+        <div class="pair">
+          <figure>
+            <img src="img/popup-06-bulk-operations.png" width="800" height="600" loading="lazy"
+              alt="Eight stale tabs selected, with a selection bar offering Pin, Unpin, Move to new window and Close 8">
+            <figcaption>Select every stale tab at once, then pin, move or close them.</figcaption>
+          </figure>
+          <figure>
+            <img src="img/popup-05-group-by-status.png" width="800" height="600" loading="lazy"
+              alt="Tabs grouped into Active, Recent, Idle and Stale sections">
+            <figcaption>Group by status, site or window to see where the clutter is.</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <section class="section alt" id="age">
+      <div class="wrap split">
+        <div>
+          <h2>Tab age, done honestly</h2>
+          <p>Chrome doesn't tell extensions when a tab was opened. It only reports when a tab was last switched to. So Autopsy keeps its own record:</p>
+          <ul class="checks">
+            <li><strong>Recorded once.</strong> A tab's age starts when it opens and isn't reset when you navigate, even inside apps like Gmail or YouTube.</li>
+            <li><strong>Kept across restarts.</strong> When Chrome restores your session, every tab and window gets a new ID. Autopsy matches restored tabs to their previous selves by address and position.</li>
+            <li><strong>Never made up.</strong> Tabs that were open before you installed Autopsy show a minimum, like <code>≥3d</code>, instead of a guess.</li>
+          </ul>
+        </div>
+        <figure class="age-card" aria-label="Example ages">
+          <div class="age-row"><span>preactjs/preact</span><b>9d</b></div>
+          <div class="age-row"><span>CSS grid layout - MDN</span><b>6w</b></div>
+          <div class="age-row"><span>Quick Start - React</span><b>2mo</b></div>
+          <div class="age-row muted"><span>Autopsy - Wikipedia</span><b>≥2mo</b></div>
+          <figcaption>A <code>≥</code> sign means the tab was open before Autopsy started tracking it.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="wrap">
+        <h2>Everything else you'd expect</h2>
+        <div class="grid">
+          <div class="card">
+            <h3>Search and filter</h3>
+            <p>Find any tab by title or address. Show only stale, idle or busy tabs, or tabs older than a day, a week or a month.</p>
+          </div>
+          <div class="card">
+            <h3>Safe bulk actions</h3>
+            <p>Pin, unpin, move to a new window or close many tabs at once. Bulk actions only touch tabs you can see, and they skip pinned tabs.</p>
+          </div>
+          <div class="card">
+            <h3>Keyboard first</h3>
+            <p>Arrow keys or <kbd>j</kbd> <kbd>k</kbd> to move, <kbd>Space</kbd> to select, <kbd>Delete</kbd> to close, <kbd>⌘Z</kbd> to undo. Press <kbd>?</kbd> for the full list.</p>
+          </div>
+          <div class="card">
+            <h3>Export</h3>
+            <p>Save the visible tabs as CSV or JSON, with ages, view times and network stats, for your own analysis or as a record.</p>
+          </div>
+          <div class="card">
+            <h3>Light and dark</h3>
+            <p>Follows your system theme, or set it yourself. Status shapes never rely on colour alone, and contrast meets WCAG AA.</p>
+          </div>
+          <div class="card">
+            <h3>Tiny and quiet</h3>
+            <p>About a 40&nbsp;KB download. No background polling and no remote code. It keeps working when Chrome puts it to sleep.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section alt">
+      <div class="wrap">
+        <h2>A closer look</h2>
+        <div class="gallery">
+          <figure>
+            <img src="img/popup-03-help-keyboard-shortcuts.png" width="800" height="600" loading="lazy"
+              alt="Help dialog explaining each status, each column and every keyboard shortcut">
+            <figcaption>Built-in help explains every status, column and shortcut.</figcaption>
+          </figure>
+          <figure>
+            <img src="img/popup-07-light-theme.png" width="800" height="600" loading="lazy"
+              alt="The Autopsy popup in the light theme">
+            <figcaption>Light theme.</figcaption>
+          </figure>
+          <figure>
+            <img src="img/popup-04-group-by-domain.png" width="800" height="600" loading="lazy"
+              alt="Tabs grouped by website">
+            <figcaption>Group by site.</figcaption>
+          </figure>
+          <figure>
+            <img src="img/popup-08-settings-menu.png" width="800" height="600" loading="lazy"
+              alt="Settings menu with theme, popup width, pinned-tab protection, export and help">
+            <figcaption>Settings: theme, width, pinned-tab protection, export.</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="privacy">
+      <div class="wrap split">
+        <div>
+          <h2>Your tabs stay yours</h2>
+          <p>Autopsy runs entirely in your browser. It has no servers, no accounts, no analytics and no external requests, not even for fonts.</p>
+          <p><a href="https://github.com/scttfrdmn/autopsy/blob/main/PRIVACY.md">Read the privacy policy →</a></p>
+        </div>
+        <dl class="facts">
+          <dt>Stores</dt>
+          <dd>The open time for each open tab, and your preferences, on your device. Network counters are kept in memory and cleared when Chrome restarts.</dd>
+          <dt>Never stores</dt>
+          <dd>Browsing history, page contents, or request and response bodies.</dd>
+          <dt>Never sends</dt>
+          <dd>Anything, anywhere.</dd>
+        </dl>
+      </div>
+    </section>
+
+    <section class="section alt" id="faq">
+      <div class="wrap narrow">
+        <h2>Questions</h2>
+        <details>
+          <summary>Why does Chrome say Autopsy can "read and change all your data on all websites"?</summary>
+          <p>That's Chrome's standard wording for the <code>webRequest</code> permission with access to all sites. Autopsy uses it only to count each tab's network requests and response sizes, which is how it can tell you a tab is still busy in the background. It never reads page contents, never reads request or response bodies, and never blocks or changes anything. The <a href="https://github.com/scttfrdmn/autopsy/blob/main/src/background/worker.ts">code that does this</a> is about 30 lines.</p>
+        </details>
+        <details>
+          <summary>How accurate is the tab age?</summary>
+          <p>It's exact for tabs opened while Autopsy is installed, and it survives navigation and browser restarts. Tabs that were already open when you installed Autopsy show a lower bound, like <code>≥3d</code>. After a restart, if several restored tabs share the same address and were rearranged, their ages can swap.</p>
+        </details>
+        <details>
+          <summary>What counts as "stale"?</summary>
+          <p>A tab you haven't switched to for over a day. The tab currently showing in each window always counts as active, however long it has been on screen.</p>
+        </details>
+        <details>
+          <summary>Will it close something I need?</summary>
+          <p>Only when you ask it to. Bulk closes skip pinned tabs (you can turn this off) and tabs hidden by your filters. Closing more than five tabs asks for confirmation. Every close can be undone for a few seconds with the Undo button or <kbd>⌘/Ctrl+Z</kbd>.</p>
+        </details>
+        <details>
+          <summary>Does it work in Edge, Brave or Arc?</summary>
+          <p>Autopsy is built and tested for Google Chrome 121 or later. Other Chromium browsers that install extensions from the Chrome Web Store may work, but they aren't tested.</p>
+        </details>
+        <details>
+          <summary>Where do I report a bug or ask for a feature?</summary>
+          <p>Open an issue on <a href="https://github.com/scttfrdmn/autopsy/issues">GitHub</a>, or email <a href="mailto:info@autopsy.tools">info@autopsy.tools</a>. What's coming next is in the <a href="https://github.com/scttfrdmn/autopsy/blob/main/ROADMAP.md">roadmap</a>.</p>
+        </details>
+      </div>
+    </section>
+
+    <section class="cta">
+      <div class="wrap">
+        <h2>Perform the autopsy.</h2>
+        <p>Free, open source, and about a minute to your first cleanup.</p>
+        <a class="btn" href="https://chromewebstore.google.com/detail/autopsy/fmlkjcobafbejgpkjkcgbhfgnlpdkegn">Add to Chrome</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap footer-inner">
+      <span>© 2025–2026 Scott Friedman · MIT License</span>
+      <nav aria-label="Footer">
+        <a href="https://github.com/scttfrdmn/autopsy">GitHub</a>
+        <a href="https://github.com/scttfrdmn/autopsy/blob/main/CHANGELOG.md">Changelog</a>
+        <a href="https://github.com/scttfrdmn/autopsy/blob/main/PRIVACY.md">Privacy</a>
+        <a href="https://github.com/scttfrdmn/autopsy/issues">Report an issue</a>
+        <a href="mailto:info@autopsy.tools">info@autopsy.tools</a>
+      </nav>
     </div>
   </footer>
-
-  <script>
-
-    // Carousel functionality
-    const track = document.querySelector('.carousel-track');
-    const slides = Array.from(track.children);
-    const nextButton = document.querySelector('.carousel-next');
-    const prevButton = document.querySelector('.carousel-prev');
-    const dotsContainer = document.querySelector('.carousel-dots');
-
-    let currentSlide = 0;
-    const totalSlides = slides.length;
-
-    // Create dots
-    slides.forEach((_, index) => {
-      const dot = document.createElement('button');
-      dot.classList.add('carousel-dot');
-      if (index === 0) dot.classList.add('active');
-      dot.setAttribute('aria-label', `Go to screenshot ${index + 1}`);
-      dot.addEventListener('click', () => goToSlide(index));
-      dotsContainer.appendChild(dot);
-    });
-
-    const dots = Array.from(dotsContainer.children);
-
-    function updateCarousel() {
-      track.style.transform = `translateX(-${currentSlide * 100}%)`;
-
-      // Update dots
-      dots.forEach((dot, index) => {
-        dot.classList.toggle('active', index === currentSlide);
-      });
-
-      // Update button states
-      prevButton.disabled = currentSlide === 0;
-      nextButton.disabled = currentSlide === totalSlides - 1;
-    }
-
-    function goToSlide(index) {
-      currentSlide = index;
-      updateCarousel();
-    }
-
-    function nextSlide() {
-      if (currentSlide < totalSlides - 1) {
-        currentSlide++;
-        updateCarousel();
-      }
-    }
-
-    function prevSlide() {
-      if (currentSlide > 0) {
-        currentSlide--;
-        updateCarousel();
-      }
-    }
-
-    nextButton.addEventListener('click', nextSlide);
-    prevButton.addEventListener('click', prevSlide);
-
-    // Keyboard navigation
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'ArrowLeft') prevSlide();
-      if (e.key === 'ArrowRight') nextSlide();
-    });
-
-    // Touch swipe support
-    let touchStartX = 0;
-    let touchEndX = 0;
-
-    track.addEventListener('touchstart', (e) => {
-      touchStartX = e.changedTouches[0].screenX;
-    });
-
-    track.addEventListener('touchend', (e) => {
-      touchEndX = e.changedTouches[0].screenX;
-      handleSwipe();
-    });
-
-    function handleSwipe() {
-      if (touchStartX - touchEndX > 50) nextSlide();
-      if (touchEndX - touchStartX > 50) prevSlide();
-    }
-
-    // Auto-advance carousel every 5 seconds
-    let autoplayInterval = setInterval(nextSlide, 5000);
-
-    // Pause autoplay on hover
-    const carousel = document.querySelector('.carousel');
-    carousel.addEventListener('mouseenter', () => {
-      clearInterval(autoplayInterval);
-    });
-
-    carousel.addEventListener('mouseleave', () => {
-      autoplayInterval = setInterval(nextSlide, 5000);
-    });
-
-    // Loop carousel
-    nextButton.addEventListener('click', () => {
-      if (currentSlide === totalSlides - 1) {
-        currentSlide = 0;
-        updateCarousel();
-      }
-    });
-
-    // Initial state
-    updateCarousel();
-  </script>
 </body>
 </html>

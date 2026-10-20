@@ -9,7 +9,7 @@
  *   npm run screenshots
  */
 import { chromium } from 'playwright';
-import { existsSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { homedir, tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -17,6 +17,8 @@ import { fileURLToPath } from 'node:url';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const dist = join(root, 'dist-screenshots');
 const out = join(root, 'screenshots');
+// Unframed 2x popup images for the website.
+const siteOut = join(root, 'docs', 'img');
 const MIN = 60_000;
 const HOUR = 60 * MIN;
 const DAY = 24 * HOUR;
@@ -26,6 +28,7 @@ if (!existsSync(join(dist, 'manifest.json'))) {
   process.exit(1);
 }
 mkdirSync(out, { recursive: true });
+mkdirSync(siteOut, { recursive: true });
 
 // [url, title, favicon colour, letter, opened ago, viewed ago, requests, bytes, network ago]
 const TABS = [
@@ -61,7 +64,7 @@ async function main() {
     channel: 'chromium',
     args: [`--disable-extensions-except=${dist}`, `--load-extension=${dist}`],
     viewport: { width: 1280, height: 800 },
-    deviceScaleFactor: 1,
+    deviceScaleFactor: 2,
   });
 
   try {
@@ -137,6 +140,7 @@ async function main() {
       await wait(250);
       const png = await app.screenshot();
       await compose(context, png, join(out, name));
+      writeFileSync(join(siteOut, `popup-${name}`), png);
       console.log(`  ✓ ${name}`);
     };
     const setTheme = async theme => {
@@ -179,10 +183,10 @@ async function compose(context, png, path) {
   await page.setContent(`
     <body style="margin:0;width:1280px;height:800px;display:grid;place-items:center;
       background:linear-gradient(135deg,#0d1b2a 0%,#12343b 100%)">
-      <img src="data:image/png;base64,${png.toString('base64')}"
+      <img src="data:image/png;base64,${png.toString('base64')}" width="800" height="600"
         style="border-radius:10px;box-shadow:0 24px 60px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.06)">
     </body>`);
-  await page.screenshot({ path });
+  await page.screenshot({ path, scale: 'css' });
   await page.close();
 }
 

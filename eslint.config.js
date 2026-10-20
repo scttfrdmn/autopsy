@@ -1,50 +1,34 @@
-import tseslint from '@typescript-eslint/eslint-plugin';
-import tsparser from '@typescript-eslint/parser';
+import tseslint from 'typescript-eslint';
 import react from 'eslint-plugin-react';
+import reactHooks from 'eslint-plugin-react-hooks';
+import prettier from 'eslint-config-prettier';
 
-export default [
+export default tseslint.config(
   {
-    ignores: ['dist/**', 'node_modules/**', '*.js', '!eslint.config.js'],
+    ignores: ['dist/**', 'dist-screenshots/**', 'node_modules/**', 'test-results/**'],
+  },
+  ...tseslint.configs.recommended,
+  {
+    rules: {
+      'no-console': 'warn',
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_', destructuredArrayIgnorePattern: '^_' },
+      ],
+    },
   },
   {
     files: ['src/**/*.{ts,tsx}'],
+    plugins: { react, 'react-hooks': reactHooks },
     languageOptions: {
-      parser: tsparser,
-      parserOptions: {
-        ecmaVersion: 'latest',
-        sourceType: 'module',
-        ecmaFeatures: {
-          jsx: true,
-        },
-      },
-      globals: {
-        chrome: 'readonly',
-        document: 'readonly',
-        window: 'readonly',
-        console: 'readonly',
-        URL: 'readonly',
-        Blob: 'readonly',
-        setTimeout: 'readonly',
-        setInterval: 'readonly',
-        clearInterval: 'readonly',
-      },
+      parserOptions: { ecmaFeatures: { jsx: true } },
     },
-    plugins: {
-      '@typescript-eslint': tseslint,
-      react,
-    },
+    settings: { react: { pragma: 'h', version: '18.0' } },
     rules: {
-      'no-console': 'warn',
-      '@typescript-eslint/no-explicit-any': 'warn',
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
-      'react/prop-types': 'off',
+      ...reactHooks.configs.recommended.rules,
+      'react/jsx-key': 'error',
       'react/no-unknown-property': ['error', { ignore: ['class'] }],
     },
-    settings: {
-      react: {
-        pragma: 'h',
-        version: 'detect',
-      },
-    },
   },
-];
+  prettier
+);

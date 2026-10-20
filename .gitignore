@@ -1,7 +1,10 @@
 node_modules/
 dist/
-.DS_Store
+dist-screenshots/
+test-results/
+playwright-report/
+*.zip
 *.log
+.DS_Store
 .vscode/
 .idea/
-CLAUDE.md

@@ -1,287 +1,215 @@
-import type { NetworkStats } from '../types';
+import type { NetworkStats, Snapshot, TabRecords } from '../types';
+import { RESTORE_WINDOW } from '../lib/constants';
+import {
+  EMPTY_STATE,
+  beginSession,
+  migrateLegacy,
+  recordCreated,
+  reconcile,
+  windowOrdinals,
+  type LiveTab,
+  type RecordState,
+} from '../lib/tabRecords';
 
-// In-memory network stats (lightweight)
-const networkStats: NetworkStats = {};
+const STATE_KEY = 'tabState';
+const SCHEMA_KEY = 'schemaVersion';
+const SCHEMA_VERSION = 2;
+// chrome.storage.session is cleared when the browser restarts or the extension reloads,
+// which is exactly when tab ids change and previous records need re-matching.
+const SESSION_FLAG = 'sessionActive';
+const STATS_KEY = 'networkStats';
 
-// Tab instance metadata for better age tracking
-interface TabInstance {
-  url: string;
-  windowId: number;
-  index: number;
-  created: number;
-  lastSeen: number;
-}
+const STATS_SAVE_DELAY = 2000;
+const RECONCILE_DELAY = 500;
 
-// Create a fingerprint for tab matching across restarts
-const createFingerprint = (url: string, windowId: number, index: number): string => {
-  return `${url}#${windowId}#${index}`;
-};
+let state: RecordState = EMPTY_STATE;
+// Network stats live in memory and are mirrored to session storage so they survive
+// Chrome stopping this worker when idle.
+let stats: NetworkStats = {};
+let screenshotOverrides: Snapshot['overrides'];
 
-// Track tab creation times with instance metadata
-chrome.tabs.onCreated.addListener(tab => {
-  if (tab.id && tab.url) {
-    const now = Date.now();
-    const fingerprint = createFingerprint(tab.url, tab.windowId, tab.index);
-
-    // Store tab instance data
-    chrome.storage.local.set({
-      [`tab_${tab.id}_created`]: now,
-      [`url_${tab.url}_first_seen`]: now,
-      [`instance_${fingerprint}`]: {
-        url: tab.url,
-        windowId: tab.windowId,
-        index: tab.index,
-        created: now,
-        lastSeen: now,
-      } as TabInstance,
-    });
-  }
-});
-
-// Initialize tab ages for existing tabs with improved matching
-const initializeTabAges = async () => {
+const liveTabs = async (): Promise<LiveTab[]> => {
   const tabs = await chrome.tabs.query({});
-  const now = Date.now();
-  const storage = await chrome.storage.local.get(null);
-
-  // Clean up old instance data (older than 30 days)
-  const thirtyDaysAgo = now - 30 * 24 * 60 * 60 * 1000;
-  const keysToRemove: string[] = [];
-
-  for (const key in storage) {
-    if (key.startsWith('instance_')) {
-      const instance = storage[key] as TabInstance;
-      if (instance.lastSeen < thirtyDaysAgo) {
-        keysToRemove.push(key);
-      }
-    }
-  }
-
-  if (keysToRemove.length > 0) {
-    await chrome.storage.local.remove(keysToRemove);
-  }
-
-  // Match existing tabs to stored instances
-  for (const tab of tabs) {
-    if (!tab.id || !tab.url) continue;
-
-    const fingerprint = createFingerprint(tab.url, tab.windowId, tab.index);
-    let tabAge = now; // Default to now - tab age starts when Autopsy first sees it
-
-    // Try to find matching instance by fingerprint
-    const instanceKey = `instance_${fingerprint}`;
-    if (storage[instanceKey]) {
-      const instance = storage[instanceKey] as TabInstance;
-      tabAge = instance.created;
-
-      // Update last seen
-      chrome.storage.local.set({
-        [instanceKey]: { ...instance, lastSeen: now },
-      });
-    } else {
-      // Try to find similar instance (same URL, different position)
-      // Only match instances that were recently seen (within last 5 minutes)
-      let bestMatch: TabInstance | null = null;
-      let bestMatchAge = now;
-      const fiveMinutesAgo = now - 5 * 60 * 1000;
-
-      for (const key in storage) {
-        if (key.startsWith('instance_') && key.includes(tab.url)) {
-          const instance = storage[key] as TabInstance;
-          // Only match recent instances to avoid using very old historical data
-          if (
-            instance.url === tab.url &&
-            instance.windowId === tab.windowId &&
-            instance.lastSeen > fiveMinutesAgo
-          ) {
-            // Found a tab with same URL in same window that was recently active
-            if (instance.created < bestMatchAge) {
-              bestMatch = instance;
-              bestMatchAge = instance.created;
-            }
-          }
-        }
-      }
-
-      if (bestMatch) {
-        tabAge = bestMatch.created;
-      }
-      // Note: Removed URL first-seen fallback to avoid very old historical ages
-
-      // Create new instance for this tab
-      chrome.storage.local.set({
-        [instanceKey]: {
-          url: tab.url,
-          windowId: tab.windowId,
-          index: tab.index,
-          created: tabAge,
-          lastSeen: now,
-        } as TabInstance,
-      });
-    }
-
-    // Set tab created time
-    chrome.storage.local.set({
-      [`tab_${tab.id}_created`]: tabAge,
-    });
-  }
+  return tabs
+    .filter((t): t is chrome.tabs.Tab & { id: number } => t.id !== undefined && t.id >= 0)
+    .map(t => ({
+      id: t.id,
+      url: t.url || t.pendingUrl || '',
+      windowId: t.windowId,
+      index: t.index,
+    }));
 };
 
-// Run on startup and installation
-chrome.runtime.onStartup.addListener(initializeTabAges);
-chrome.runtime.onInstalled.addListener(initializeTabAges);
+const saveState = () => chrome.storage.local.set({ [STATE_KEY]: state });
 
-// Track URL changes to maintain history
-chrome.tabs.onUpdated.addListener(async (_tabId, changeInfo, tab) => {
-  if (changeInfo.url && tab.url && tab.id) {
-    const now = Date.now();
-
-    // Check if we've seen this URL before
-    const result = await chrome.storage.local.get(`url_${tab.url}_first_seen`);
-    if (!result[`url_${tab.url}_first_seen`]) {
-      // First time seeing this URL
-      await chrome.storage.local.set({
-        [`url_${tab.url}_first_seen`]: now,
-      });
-    }
-
-    // Update instance data for URL change
-    const fingerprint = createFingerprint(tab.url, tab.windowId, tab.index);
-    await chrome.storage.local.set({
-      [`instance_${fingerprint}`]: {
-        url: tab.url,
-        windowId: tab.windowId,
-        index: tab.index,
-        created: now, // New URL means new instance
-        lastSeen: now,
-      } as TabInstance,
-      [`tab_${tab.id}_created`]: now,
-    });
-  }
-});
-
-// Track tab moves to update instance fingerprints
-chrome.tabs.onMoved.addListener(async (tabId, moveInfo) => {
-  const tab = await chrome.tabs.get(tabId);
-  if (!tab.url) return;
-
+const init = async () => {
+  const [local, session] = await Promise.all([
+    chrome.storage.local.get(null),
+    chrome.storage.session.get([SESSION_FLAG, STATS_KEY]),
+  ]);
   const now = Date.now();
-  const oldFingerprint = createFingerprint(tab.url, moveInfo.windowId, moveInfo.fromIndex);
-  const newFingerprint = createFingerprint(tab.url, moveInfo.windowId, moveInfo.toIndex);
+  stats = (session[STATS_KEY] as NetworkStats | undefined) ?? {};
 
-  // Get existing instance data
-  const storage = await chrome.storage.local.get(`instance_${oldFingerprint}`);
-  const oldInstance = storage[`instance_${oldFingerprint}`] as TabInstance | undefined;
+  let migrated = false;
+  if (local[SCHEMA_KEY] !== SCHEMA_VERSION) {
+    const result = migrateLegacy(local, await liveTabs(), now);
+    state = result.state;
+    migrated = true;
+    if (result.removeKeys.length) await chrome.storage.local.remove(result.removeKeys);
+    await chrome.storage.local.set({ [SCHEMA_KEY]: SCHEMA_VERSION });
+  } else {
+    state = (local[STATE_KEY] as RecordState | undefined) ?? EMPTY_STATE;
+  }
 
-  if (oldInstance) {
-    // Move instance to new fingerprint
-    await chrome.storage.local.set({
-      [`instance_${newFingerprint}`]: {
-        ...oldInstance,
-        index: moveInfo.toIndex,
-        lastSeen: now,
-      },
+  if (!session[SESSION_FLAG]) {
+    if (!migrated) state = beginSession(state, now, RESTORE_WINDOW);
+    await chrome.storage.session.set({ [SESSION_FLAG]: true });
+  }
+
+  const tabs = await liveTabs();
+  if (tabs.length) state = reconcile(state, tabs, now);
+  await saveState();
+};
+
+const ready = init();
+
+// Serialize every state change so concurrent events can't overwrite each other.
+let queue: Promise<void> = Promise.resolve();
+const mutate = (fn: (s: RecordState) => RecordState | Promise<RecordState>) => {
+  queue = queue
+    .then(async () => {
+      await ready;
+      state = await fn(state);
+      await saveState();
+    })
+    .catch(() => {
+      // Keep the queue alive; the next reconcile repairs any missed update.
     });
-    await chrome.storage.local.remove(`instance_${oldFingerprint}`);
-  }
-});
+  return queue;
+};
 
-// Track tab attachment (moved between windows)
-chrome.tabs.onAttached.addListener(async (tabId, attachInfo) => {
-  const tab = await chrome.tabs.get(tabId);
-  if (!tab.url) return;
+const reconcileNow = () =>
+  mutate(async s => {
+    const tabs = await liveTabs();
+    // No tabs means the browser is shutting down: keep records for the next session.
+    return tabs.length ? reconcile(s, tabs, Date.now()) : s;
+  });
 
-  const now = Date.now();
-  const newFingerprint = createFingerprint(tab.url, attachInfo.newWindowId, attachInfo.newPosition);
+let reconcileTimer: ReturnType<typeof setTimeout> | undefined;
+const scheduleReconcile = () => {
+  clearTimeout(reconcileTimer);
+  reconcileTimer = setTimeout(reconcileNow, RECONCILE_DELAY);
+};
 
-  // Try to find existing instance in old window
-  const storage = await chrome.storage.local.get(null);
-  let existingInstance: TabInstance | null = null;
+let statsTimer: ReturnType<typeof setTimeout> | undefined;
+const scheduleStatsSave = () => {
+  if (statsTimer) return;
+  statsTimer = setTimeout(() => {
+    statsTimer = undefined;
+    chrome.storage.session.set({ [STATS_KEY]: stats });
+  }, STATS_SAVE_DELAY);
+};
 
-  for (const key in storage) {
-    if (key.startsWith('instance_')) {
-      const instance = storage[key] as TabInstance;
-      if (instance.url === tab.url) {
-        existingInstance = instance;
-        await chrome.storage.local.remove(key);
-        break;
-      }
-    }
-  }
+chrome.runtime.onStartup.addListener(() => void ready);
+chrome.runtime.onInstalled.addListener(() => void ready);
 
-  // Create/update instance in new window
-  await chrome.storage.local.set({
-    [`instance_${newFingerprint}`]: {
-      url: tab.url,
-      windowId: attachInfo.newWindowId,
-      index: attachInfo.newPosition,
-      created: existingInstance?.created || now,
-      lastSeen: now,
-    } as TabInstance,
+chrome.tabs.onCreated.addListener(tab => {
+  if (tab.id === undefined) return;
+  const id = tab.id;
+  mutate(async s => {
+    const ordinal = windowOrdinals(await liveTabs()).get(tab.windowId) ?? 0;
+    const live = {
+      id,
+      url: tab.url || tab.pendingUrl || '',
+      windowId: tab.windowId,
+      index: tab.index,
+    };
+    return recordCreated(s, live, ordinal, Date.now());
   });
 });
 
-// Clean up when tabs close
-chrome.tabs.onRemoved.addListener(async tabId => {
-  await chrome.storage.local.remove(`tab_${tabId}_created`);
-  delete networkStats[tabId];
-
-  // Note: We keep instance data for potential tab restoration
-  // Cleanup happens in initializeTabAges (30 day TTL)
+chrome.tabs.onUpdated.addListener((_tabId, changeInfo) => {
+  // URL changes update the record's URL; they never reset the tab's age.
+  if (changeInfo.url) scheduleReconcile();
 });
 
-// Track network activity (lightweight - only count and timing)
+chrome.tabs.onMoved.addListener(scheduleReconcile);
+chrome.tabs.onAttached.addListener(scheduleReconcile);
+chrome.tabs.onDetached.addListener(scheduleReconcile);
+
+chrome.tabs.onReplaced.addListener((addedTabId, removedTabId) => {
+  if (stats[removedTabId]) {
+    stats[addedTabId] = stats[removedTabId];
+    delete stats[removedTabId];
+    scheduleStatsSave();
+  }
+  mutate(s => {
+    const records: TabRecords = { ...s.records };
+    if (records[removedTabId]) {
+      records[addedTabId] = records[removedTabId];
+      delete records[removedTabId];
+    }
+    return { ...s, records };
+  });
+});
+
+chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
+  if (stats[tabId]) {
+    delete stats[tabId];
+    scheduleStatsSave();
+  }
+  // Tabs closing with their window may be the browser quitting; keep them for restore.
+  if (!removeInfo.isWindowClosing) scheduleReconcile();
+});
+
 chrome.webRequest.onCompleted.addListener(
   details => {
-    const tabId = details.tabId;
-    if (tabId === -1) return; // Skip non-tab requests
-
-    if (!networkStats[tabId]) {
-      networkStats[tabId] = {
+    const { tabId } = details;
+    if (tabId < 0) return;
+    ready.then(() => {
+      const entry = (stats[tabId] ??= {
         requestCount: 0,
         bytesReceived: 0,
         lastActivity: null,
         firstActivity: null,
-      };
-    }
-
-    const stats = networkStats[tabId];
-
-    // Update timing
-    stats.lastActivity = details.timeStamp;
-    if (!stats.firstActivity) {
-      stats.firstActivity = details.timeStamp;
-    }
-
-    // Update counts
-    stats.requestCount++;
-
-    // Try to get content length (not always present)
-    if (details.responseHeaders) {
-      const contentLength = details.responseHeaders.find(
-        h => h.name.toLowerCase() === 'content-length'
-      );
-      if (contentLength?.value) {
-        stats.bytesReceived += parseInt(contentLength.value, 10);
+      });
+      entry.requestCount++;
+      entry.lastActivity = details.timeStamp;
+      entry.firstActivity ??= details.timeStamp;
+      // Cached responses didn't cross the network; content-length is the only size available.
+      if (!details.fromCache) {
+        const length = details.responseHeaders?.find(
+          h => h.name.toLowerCase() === 'content-length'
+        );
+        const bytes = length?.value ? parseInt(length.value, 10) : 0;
+        if (bytes > 0) entry.bytesReceived += bytes;
       }
-    }
+      scheduleStatsSave();
+    });
   },
   { urls: ['<all_urls>'] },
   ['responseHeaders']
 );
 
-// Expose network stats to popup
 chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
-  if (request.action === 'getNetworkStats') {
-    sendResponse({ stats: networkStats });
+  if (request?.action === 'getSnapshot') {
+    clearTimeout(reconcileTimer);
+    reconcileNow().then(() => {
+      const snapshot: Snapshot = { records: state.records, stats, overrides: screenshotOverrides };
+      sendResponse(snapshot);
+    });
     return true;
   }
 
-  if (request.action === 'setFakeNetworkStats') {
-    // For screenshot automation: replace network stats with fake data
-    Object.keys(networkStats).forEach(key => delete networkStats[key as unknown as number]);
-    Object.assign(networkStats, request.stats);
-    sendResponse({ success: true });
+  // Screenshot builds only; compiled out of the production bundle.
+  if (import.meta.env.MODE === 'screenshots' && request?.action === 'setFakeData') {
+    mutate(s => ({ ...s, records: { ...s.records, ...request.records } })).then(() => {
+      stats = request.stats ?? {};
+      screenshotOverrides = request.overrides;
+      sendResponse({ success: true });
+    });
     return true;
   }
+
+  return false;
 });

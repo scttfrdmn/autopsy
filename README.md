@@ -2,7 +2,7 @@
 
 [![Version](https://img.shields.io/badge/version-0.23.0-blue.svg)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Chrome](https://img.shields.io/badge/Chrome-121%2B-4285F4.svg)](https://chromewebstore.google.com/detail/autopsy/mmcbbcemljflnhgkfenmpcidehmaoihk)
+[![Chrome](https://img.shields.io/badge/Chrome-121%2B-4285F4.svg)](https://chromewebstore.google.com/detail/autopsy/fmlkjcobafbejgpkjkcgbhfgnlpdkegn)
 
 > **Postmortem analysis for your tabs.** Find what to close.
 
@@ -79,7 +79,7 @@ Network stats are kept in `chrome.storage.session`. They survive Chrome stopping
 
 ## Install
 
-**[Chrome Web Store →](https://chromewebstore.google.com/detail/autopsy/mmcbbcemljflnhgkfenmpcidehmaoihk)** (Chrome 121 or later)
+**[Chrome Web Store →](https://chromewebstore.google.com/detail/autopsy/fmlkjcobafbejgpkjkcgbhfgnlpdkegn)** (Chrome 121 or later)
 
 ### From source
 

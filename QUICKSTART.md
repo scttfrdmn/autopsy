@@ -2,7 +2,7 @@
 
 ## Install
 
-From the [Chrome Web Store](https://chromewebstore.google.com/detail/autopsy/mmcbbcemljflnhgkfenmpcidehmaoihk), or from source:
+From the [Chrome Web Store](https://chromewebstore.google.com/detail/autopsy/fmlkjcobafbejgpkjkcgbhfgnlpdkegn), or from source:
 
 ```bash
 npm install

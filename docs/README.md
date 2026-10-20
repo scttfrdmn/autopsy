@@ -52,15 +52,9 @@ This directory contains the landing page for autopsy.tools, hosted via GitHub Pa
    - Once DNS is configured, GitHub will offer HTTPS option
    - Check "Enforce HTTPS" in Settings → Pages
 
-## Update Chrome Web Store URL
+## Chrome Web Store link
 
-After extension is published, update the install button URLs in `index.html`:
-
-```javascript
-const chromeWebStoreUrl = 'https://chromewebstore.google.com/detail/autopsy/YOUR_EXTENSION_ID';
-```
-
-Replace `YOUR_EXTENSION_ID` with actual extension ID from Chrome Web Store.
+Both install buttons in `index.html` link to the store listing for extension ID `fmlkjcobafbejgpkjkcgbhfgnlpdkegn` (the ID in the Developer Dashboard URL, also in `scripts/cws.config.json`).
 
 ## Local Development
 

@@ -2,7 +2,7 @@
 
 All notable changes to Autopsy. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses [Semantic Versioning](https://semver.org/).
 
-## [0.23.0] - Unreleased
+## [0.23.0] - 2026-10-19
 
 A rework of how Autopsy measures tabs, a redesigned popup, and a sweep of bug fixes.
 
@@ -113,7 +113,7 @@ A rework of how Autopsy measures tabs, a redesigned popup, and a sweep of bug fi
 ### Added
 - Initial beta: tab list with status, age filter and bulk close.
 
-[0.23.0]: https://github.com/scttfrdmn/autopsy/compare/v0.22.0...release/0.23.0
+[0.23.0]: https://github.com/scttfrdmn/autopsy/releases/tag/v0.23.0
 [0.22.0]: https://github.com/scttfrdmn/autopsy/releases/tag/v0.22.0
 [0.21.1]: https://github.com/scttfrdmn/autopsy/releases/tag/v0.21.1
 [0.21.0]: https://github.com/scttfrdmn/autopsy/releases/tag/v0.21.0

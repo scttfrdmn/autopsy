@@ -1,533 +1,192 @@
 #!/usr/bin/env node
-
 /**
- * Capture Chrome Web Store screenshots using Playwright
- * Updated for v0.22.0 with column resizing feature
+ * Capture Chrome Web Store screenshots (1280×800) of the popup.
  *
- * This script:
- * 1. Launches Chrome with Autopsy extension loaded
- * 2. Creates test tabs with various characteristics
- * 3. Opens extension popup
- * 4. Captures screenshots of different features including column resizing
+ * Uses the screenshot build (`npm run build:screenshots` → dist-screenshots/), which accepts
+ * fake ages, view times and network stats. Sites are served from fake local pages, so no
+ * network is needed and the output is deterministic.
+ *
+ *   npm run screenshots
  */
-
 import { chromium } from 'playwright';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
-import { mkdirSync, existsSync } from 'fs';
+import { existsSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
+import { homedir, tmpdir } from 'node:os';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-const projectRoot = join(__dirname, '..');
-const distPath = join(projectRoot, 'dist');
-const screenshotsPath = join(projectRoot, 'screenshots');
+const root = join(dirname(fileURLToPath(import.meta.url)), '..');
+const dist = join(root, 'dist-screenshots');
+const out = join(root, 'screenshots');
+const MIN = 60_000;
+const HOUR = 60 * MIN;
+const DAY = 24 * HOUR;
 
-// Create screenshots directory
-if (!existsSync(screenshotsPath)) {
-  mkdirSync(screenshotsPath);
+if (!existsSync(join(dist, 'manifest.json'))) {
+  console.error('Missing dist-screenshots/. Run `npm run build:screenshots` first.');
+  process.exit(1);
 }
+mkdirSync(out, { recursive: true });
 
-// Test URLs with variety
-const testUrls = [
-  { url: 'https://github.com', wait: 100 },
-  { url: 'https://github.com/trending', wait: 200 },
-  { url: 'https://stackoverflow.com', wait: 150 },
-  { url: 'https://stackoverflow.com/questions', wait: 250 },
-  { url: 'https://developer.mozilla.org', wait: 180 },
-  { url: 'https://developer.mozilla.org/en-US/docs/Web/JavaScript', wait: 220 },
-  { url: 'https://news.ycombinator.com', wait: 120 },
-  { url: 'https://www.reddit.com', wait: 160 },
-  { url: 'https://www.reddit.com/r/programming', wait: 190 },
-  { url: 'https://twitter.com', wait: 130 },
-  { url: 'https://medium.com', wait: 170 },
-  { url: 'https://dev.to', wait: 140 },
-  { url: 'https://npmjs.com', wait: 210 },
-  { url: 'https://www.typescriptlang.org', wait: 260 },
-  { url: 'https://react.dev', wait: 230 },
+// [url, title, favicon colour, letter, opened ago, viewed ago, requests, bytes, network ago]
+const TABS = [
+  ['https://github.com/preactjs/preact', 'preactjs/preact: Fast 3kB React alternative', '#24292f', 'G', 9 * DAY, 2 * MIN, 48, 1_900_000, 5_000],
+  ['https://github.com/trending', 'Trending repositories on GitHub today', '#24292f', 'G', 3 * DAY, 26 * HOUR, 12, 640_000, 26 * HOUR],
+  ['https://developer.mozilla.org/en-US/docs/Web/API/Tabs', 'Tabs API - MDN Web Docs', '#1b1b1b', 'M', 21 * DAY, 40 * MIN, 22, 820_000, 40 * MIN],
+  ['https://developer.mozilla.org/en-US/docs/Web/CSS/grid', 'CSS grid layout - MDN Web Docs', '#1b1b1b', 'M', 45 * DAY, 12 * DAY, 18, 540_000, 12 * DAY],
+  ['https://news.ycombinator.com/', 'Hacker News', '#ff6600', 'Y', 2 * DAY, 3 * HOUR, 9, 61_000, 30_000],
+  ['https://www.nytimes.com/', 'The New York Times - Breaking News', '#000000', 'T', 6 * DAY, 4 * DAY, 230, 9_400_000, 20_000],
+  ['https://docs.google.com/document/d/1', 'Q4 planning notes - Google Docs', '#1a73e8', 'D', 14 * DAY, 15 * MIN, 140, 3_200_000, 12_000],
+  ['https://mail.google.com/mail/u/0/', 'Inbox (3) - Gmail', '#ea4335', 'M', 30 * DAY, 8 * MIN, 410, 12_600_000, 3_000],
+  ['https://stackoverflow.com/questions/1', 'How do I debounce in TypeScript? - Stack Overflow', '#f48024', 'S', 8 * DAY, 8 * DAY, 31, 1_100_000, 8 * DAY],
+  ['https://stackoverflow.com/questions/1', 'How do I debounce in TypeScript? - Stack Overflow', '#f48024', 'S', 2 * HOUR, 2 * HOUR, 30, 1_050_000, 2 * HOUR],
+  ['https://www.youtube.com/watch?v=1', 'Designing calm interfaces - YouTube', '#ff0000', 'Y', 5 * DAY, 2 * DAY, 96, 48_000_000, 2 * DAY],
+  ['https://react.dev/learn', 'Quick Start - React', '#149eca', 'R', 60 * DAY, 20 * DAY, 14, 420_000, 20 * DAY],
+  ['https://www.typescriptlang.org/docs/', 'TypeScript Documentation', '#3178c6', 'T', 33 * DAY, 9 * DAY, 11, 380_000, 9 * DAY],
+  ['https://en.wikipedia.org/wiki/Autopsy', 'Autopsy - Wikipedia', '#636466', 'W', null, 70 * DAY, 0, 0, null],
+  ['https://figma.com/file/1', 'Autopsy redesign - Figma', '#a259ff', 'F', 4 * DAY, 50 * MIN, 77, 6_800_000, 50 * MIN],
 ];
 
-async function wait(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
+const favicon = (color, letter) =>
+  `data:image/svg+xml,${encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect width="16" height="16" rx="3" fill="${color}"/><text x="8" y="12" font-family="Arial" font-weight="bold" font-size="11" fill="#fff" text-anchor="middle">${letter}</text></svg>`
+  )}`;
+
+const wait = ms => new Promise(r => setTimeout(r, ms));
 
 async function main() {
-  console.log('🚀 Starting screenshot capture for v0.22.0...\n');
-
-  // Launch browser with extension
-  console.log('📦 Loading extension from:', distPath);
-  const context = await chromium.launchPersistentContext('', {
-    headless: false,
-    args: [
-      `--disable-extensions-except=${distPath}`,
-      `--load-extension=${distPath}`,
-      '--no-sandbox',
-    ],
+  const xtmp = join(homedir(), '.xtmp');
+  const profile = mkdtempSync(join(existsSync(xtmp) ? xtmp : tmpdir(), 'autopsy-shots-'));
+  const context = await chromium.launchPersistentContext(profile, {
+    headless: true,
+    channel: 'chromium',
+    args: [`--disable-extensions-except=${dist}`, `--load-extension=${dist}`],
     viewport: { width: 1280, height: 800 },
+    deviceScaleFactor: 1,
   });
 
-  const page = await context.newPage();
+  try {
+    await context.route(/^https:\/\//, route => {
+      const url = route.request().url();
+      const spec = TABS.find(t => t[0] === url);
+      const title = spec?.[1] ?? 'Page';
+      const icon = spec ? favicon(spec[2], spec[3]) : '';
+      return route.fulfill({
+        contentType: 'text/html',
+        body: `<!doctype html><title>${title}</title><link rel="icon" href="${icon}"><h1>${title}</h1>`,
+      });
+    });
 
-  console.log('📑 Creating test tabs...');
+    const worker = context.serviceWorkers()[0] ?? (await context.waitForEvent('serviceworker'));
+    const extensionId = new URL(worker.url()).host;
+    const popupUrl = `chrome-extension://${extensionId}/index.html`;
 
-  // Create tabs with staggered timing for age variety
-  for (const { url, wait: waitTime } of testUrls) {
-    const tab = await context.newPage();
-    try {
-      await tab.goto(url, { waitUntil: 'domcontentloaded', timeout: 10000 });
-      console.log(`   ✓ ${url}`);
-    } catch (error) {
-      console.log(`   ⚠ ${url} (failed, skipping)`);
+    for (const [url] of TABS) {
+      const page = await context.newPage();
+      await page.goto(url);
     }
-    await wait(waitTime);
-  }
+    await wait(1000);
 
-  // Wait for tabs to settle and accumulate different statuses
-  console.log('\n⏳ Waiting for tabs to accumulate status variety (10 seconds)...');
-  await wait(10000);
-
-  // Get extension ID
-  console.log('\n🔍 Finding extension ID...');
-
-  // Look for service worker or background page
-  let extensionId = null;
-  const serviceWorkers = context.serviceWorkers();
-
-  for (const sw of serviceWorkers) {
-    const url = sw.url();
-    if (url.includes('chrome-extension://')) {
-      extensionId = new URL(url).host;
-      break;
-    }
-  }
-
-  // If not found in service workers, wait a bit and check all pages
-  if (!extensionId) {
-    await wait(2000);
-    const pages = context.pages();
-    for (const p of pages) {
-      const url = p.url();
-      if (url.includes('chrome-extension://')) {
-        extensionId = new URL(url).host;
-        break;
-      }
-    }
-  }
-
-  if (!extensionId) {
-    console.error('❌ Extension not found! Make sure it is built.');
-    console.log('   Available pages:', context.pages().map(p => p.url()));
-    console.log('   Service workers:', serviceWorkers.map(sw => sw.url()));
-    await context.close();
-    return;
-  }
-
-  console.log('✓ Extension ID:', extensionId);
-
-  const popupUrl = `chrome-extension://${extensionId}/index.html`;
-  console.log('✓ Popup URL:', popupUrl);
-
-  // Clear extension storage to reset tab ages
-  console.log('\n🗑️  Clearing extension storage...');
-  const clearPage = await context.newPage();
-  await clearPage.goto(popupUrl);
-  await clearPage.evaluate(() => {
-    return chrome.storage.local.clear();
-  });
-  await clearPage.close();
-  console.log('✓ Storage cleared');
-  await wait(1000); // Wait for storage to clear
-
-  // Set realistic fake ages and network activity for variety in screenshots
-  console.log('📅 Setting realistic tab ages and activity...');
-  const setupPage = await context.newPage();
-  await setupPage.goto(popupUrl);
-
-  // Send message to background worker to set fake data
-  await setupPage.evaluate(() => {
-    return chrome.tabs.query({}).then(tabs => {
+    // Group two tabs like a real Chrome tab group.
+    const setup = await context.newPage();
+    await setup.goto(popupUrl);
+    await setup.evaluate(async ({ tabs, MIN }) => {
       const now = Date.now();
-
-      // Varied ages for realism
-      const ages = [
-        5 * 60 * 1000,              // 5 minutes
-        15 * 60 * 1000,             // 15 minutes
-        45 * 60 * 1000,             // 45 minutes
-        2 * 60 * 60 * 1000,         // 2 hours
-        5 * 60 * 60 * 1000,         // 5 hours
-        1 * 24 * 60 * 60 * 1000,    // 1 day
-        3 * 24 * 60 * 60 * 1000,    // 3 days
-        7 * 24 * 60 * 60 * 1000,    // 7 days
-        14 * 24 * 60 * 60 * 1000,   // 14 days
-        30 * 24 * 60 * 60 * 1000,   // 30 days
-      ];
-
-      // Activity patterns for varied statuses
-      const activityPatterns = [
-        { lastActivity: now - 10 * 1000, requestCount: 15, bytesReceived: 256000 },         // Active (< 30s)
-        { lastActivity: now - 60 * 1000, requestCount: 8, bytesReceived: 128000 },          // Recent (1min)
-        { lastActivity: now - 5 * 60 * 1000, requestCount: 5, bytesReceived: 64000 },       // Recent (5min)
-        { lastActivity: now - 45 * 60 * 1000, requestCount: 3, bytesReceived: 32000 },      // Idle (45min)
-        { lastActivity: now - 2 * 60 * 60 * 1000, requestCount: 2, bytesReceived: 16000 },  // Idle (2h)
-        { lastActivity: now - 6 * 60 * 60 * 1000, requestCount: 1, bytesReceived: 8000 },   // Inactive (6h)
-        { lastActivity: now - 24 * 60 * 60 * 1000, requestCount: 0, bytesReceived: 0 },     // Inactive (1d)
-        { lastActivity: null, requestCount: 0, bytesReceived: 0 },                          // Inactive (never)
-      ];
-
-      const storageData = {};
-      const networkStatsData = {};
-
-      tabs.forEach((tab, index) => {
-        if (tab.id && tab.url && !tab.url.startsWith('chrome-extension://') && tab.url !== 'about:blank') {
-          // Set varied age
-          const ageOffset = ages[index % ages.length];
-          const created = now - ageOffset;
-          storageData[`tab_${tab.id}_created`] = created;
-
-          // ALSO set instance fingerprint to prevent background worker from overwriting
-          // Fingerprint format: url#windowId#index (matches worker.ts createFingerprint)
-          const fingerprint = `${tab.url}#${tab.windowId}#${tab.index}`;
-          storageData[`instance_${fingerprint}`] = {
-            url: tab.url,
-            windowId: tab.windowId,
-            index: tab.index,
-            created: created,
-            lastSeen: now,
-          };
-
-          // Set varied activity
-          const activity = activityPatterns[index % activityPatterns.length];
-          networkStatsData[tab.id] = {
-            requestCount: activity.requestCount,
-            bytesReceived: activity.bytesReceived,
-            lastActivity: activity.lastActivity,
-            firstActivity: created,
+      const all = await chrome.tabs.query({});
+      const records = {};
+      const stats = {};
+      const overrides = {};
+      tabs.forEach(([url, , , , opened, viewed, requests, bytes, network], i) => {
+        const tab = all.filter(t => t.url === url)[i > 0 && tabs[i - 1][0] === url ? 1 : 0];
+        if (!tab) return;
+        records[tab.id] = {
+          url,
+          created: opened === null ? null : now - opened,
+          firstSeen: opened === null ? now - 3 * 24 * 60 * MIN : now - opened,
+          windowOrdinal: 0,
+          index: tab.index,
+        };
+        overrides[tab.id] = { lastViewed: now - viewed };
+        if (requests) {
+          stats[tab.id] = {
+            requestCount: requests,
+            bytesReceived: bytes,
+            lastActivity: now - network,
+            firstActivity: now - opened,
           };
         }
       });
+      await chrome.runtime.sendMessage({ action: 'setFakeData', records, stats, overrides });
+      const docs = all.filter(t => t.url.includes('google.com')).map(t => t.id);
+      const group = await chrome.tabs.group({ tabIds: docs });
+      await chrome.tabGroups.update(group, { title: 'Work', color: 'blue' });
+      const pinned = all.find(t => t.url.includes('mail.google.com'));
+      if (pinned) await chrome.tabs.update(pinned.id, { pinned: true });
+    }, { tabs: TABS, MIN });
+    await setup.close();
 
-      // Set storage data
-      return chrome.storage.local.set(storageData).then(() => {
-        // Send network stats to background worker
-        return chrome.runtime.sendMessage({
-          action: 'setFakeNetworkStats',
-          stats: networkStatsData
-        });
-      });
+    const popup = await context.newPage();
+    await popup.setViewportSize({ width: 800, height: 600 });
+    await popup.goto(popupUrl);
+    await popup.waitForSelector('tr.tab-row');
+    const app = popup.locator('.app');
+
+    const shoot = async (name, prepare) => {
+      await popup.reload();
+      await popup.waitForSelector('tr.tab-row');
+      if (prepare) await prepare();
+      await wait(250);
+      const png = await app.screenshot();
+      await compose(context, png, join(out, name));
+      console.log(`  ✓ ${name}`);
+    };
+    const setTheme = async theme => {
+      await popup.evaluate(async t => {
+        const { preferences = {} } = await chrome.storage.local.get('preferences');
+        await chrome.storage.local.set({ preferences: { ...preferences, theme: t } });
+      }, theme);
+    };
+
+    await setTheme('dark');
+    await shoot('01-main-interface.png');
+    await shoot('02-keyboard-navigation.png', async () => {
+      await popup.keyboard.press('ArrowDown');
+      await popup.keyboard.press('ArrowDown');
+      await popup.keyboard.press('Space');
+      await popup.keyboard.press('ArrowDown');
+      await popup.keyboard.press('ArrowDown');
+      await popup.keyboard.press('Space');
     });
-  });
-
-  await setupPage.close();
-  console.log('✓ Realistic ages and activity set');
-  await wait(4000); // Wait longer for data to propagate to all contexts
-
-  // Screenshot 1: Main Interface
-  console.log('\n📸 Screenshot 1: Main Interface...');
-  const popup1 = await context.newPage();
-  await popup1.goto(popupUrl);
-  await wait(3000); // Wait for data to load completely
-
-  // Set to large width (L button)
-  try {
-    await popup1.click('[aria-label="Set large width"]', { timeout: 5000 });
-    await wait(500);
-  } catch (e) {
-    console.log('   ⚠ Could not set width, continuing...');
+    await shoot('03-help-keyboard-shortcuts.png', () => popup.keyboard.press('?'));
+    await shoot('04-group-by-domain.png', () => popup.selectOption('select[aria-label="Group by"]', 'domain'));
+    await shoot('05-group-by-status.png', () => popup.selectOption('select[aria-label="Group by"]', 'status'));
+    await shoot('06-bulk-operations.png', () =>
+      popup.getByRole('button', { name: /Select \d+ stale/ }).click()
+    );
+    await shoot('08-settings-menu.png', () => popup.getByRole('button', { name: 'Settings and tools' }).click());
+    await setTheme('light');
+    await shoot('07-light-theme.png');
+    await setTheme('system');
+  } finally {
+    await context.close();
+    rmSync(profile, { recursive: true, force: true });
   }
-
-  // Sort by age to show variety
-  try {
-    const ageHeader = await popup1.$('th:has-text("Age")');
-    if (ageHeader) {
-      await ageHeader.click();
-      await wait(500);
-    }
-  } catch (e) {
-    console.log('   ⚠ Could not sort by age, continuing...');
-  }
-
-  // Capture just the extension popup
-  const appElement = await popup1.$('.app');
-  await appElement.screenshot({
-    path: join(screenshotsPath, '01-main-interface.png'),
-  });
-  console.log('   ✓ Saved: 01-main-interface.png');
-
-  // Screenshot 2: Keyboard Navigation (NEW for v0.21.0)
-  console.log('\n📸 Screenshot 2: Keyboard Navigation (NEW)...');
-  const popup2 = await context.newPage();
-  await popup2.goto(popupUrl);
-  await wait(2000);
-
-  // Set to large width
-  try {
-    await popup2.click('[aria-label="Set large width"]', { timeout: 5000 });
-    await wait(500);
-  } catch (e) {
-    console.log('   ⚠ Could not set width, continuing...');
-  }
-
-  // Press arrow down a few times to show focus indicator
-  try {
-    await popup2.keyboard.press('ArrowDown');
-    await wait(300);
-    await popup2.keyboard.press('ArrowDown');
-    await wait(300);
-    await popup2.keyboard.press('ArrowDown');
-    await wait(500);
-  } catch (e) {
-    console.log('   ⚠ Could not navigate with keyboard, continuing...');
-  }
-
-  // Capture just the extension popup
-  const appElement2 = await popup2.$('.app');
-  await appElement2.screenshot({
-    path: join(screenshotsPath, '02-keyboard-navigation.png'),
-  });
-  console.log('   ✓ Saved: 02-keyboard-navigation.png');
-
-  // Screenshot 3: Help Modal with Keyboard Shortcuts (NEW for v0.21.0)
-  console.log('\n📸 Screenshot 3: Help Modal with Keyboard Shortcuts (NEW)...');
-  const popup3 = await context.newPage();
-  await popup3.goto(popupUrl);
-  await wait(2000);
-
-  // Set to large width
-  try {
-    await popup3.click('[aria-label="Set large width"]', { timeout: 5000 });
-    await wait(500);
-  } catch (e) {
-    console.log('   ⚠ Could not set width, continuing...');
-  }
-
-  // Open help modal
-  try {
-    const helpButton = await popup3.$('button[aria-label="Help"]');
-    if (helpButton) {
-      await helpButton.click();
-      await wait(500);
-    }
-  } catch (e) {
-    console.log('   ⚠ Could not open help modal, continuing...');
-  }
-
-  // Capture just the extension popup
-  const appElement3 = await popup3.$('.app');
-  await appElement3.screenshot({
-    path: join(screenshotsPath, '03-help-keyboard-shortcuts.png'),
-  });
-  console.log('   ✓ Saved: 03-help-keyboard-shortcuts.png');
-
-  // Screenshot 4: Group by Domain
-  console.log('\n📸 Screenshot 4: Group by Domain...');
-  const popup4 = await context.newPage();
-  await popup4.goto(popupUrl);
-  await wait(2000);
-
-  // Set to large width
-  try {
-    await popup4.click('[aria-label="Set large width"]', { timeout: 5000 });
-    await wait(500);
-  } catch (e) {
-    console.log('   ⚠ Could not set width, continuing...');
-  }
-
-  // Click group button to cycle to domain grouping
-  try {
-    const groupButton = await popup4.$('button[aria-label*="group"]');
-    if (groupButton) {
-      await groupButton.click();
-      await wait(500);
-    }
-  } catch (e) {
-    console.log('   ⚠ Could not activate grouping, continuing...');
-  }
-
-  // Capture just the extension popup
-  const appElement4 = await popup4.$('.app'); await appElement4.screenshot({
-    path: join(screenshotsPath, '04-group-by-domain.png'),
-    
-  });
-  console.log('   ✓ Saved: 04-group-by-domain.png');
-
-  // Screenshot 5: Group by Status
-  console.log('\n📸 Screenshot 5: Group by Status...');
-  const popup5 = await context.newPage();
-  await popup5.goto(popupUrl);
-  await wait(2000);
-
-  // Set to large width
-  try {
-    await popup5.click('[aria-label="Set large width"]', { timeout: 5000 });
-    await wait(500);
-  } catch (e) {
-    console.log('   ⚠ Could not set width, continuing...');
-  }
-
-  // Cycle to status grouping (click group button multiple times)
-  try {
-    const groupButton5 = await popup5.$('button[aria-label*="group"]');
-    if (groupButton5) {
-      await groupButton5.click();
-      await wait(300);
-      await groupButton5.click();
-      await wait(300);
-      await groupButton5.click();
-      await wait(500);
-    }
-  } catch (e) {
-    console.log('   ⚠ Could not cycle grouping, continuing...');
-  }
-
-  // Capture just the extension popup
-  const appElement5 = await popup5.$('.app'); await appElement5.screenshot({
-    path: join(screenshotsPath, '05-group-by-status.png'),
-    
-  });
-  console.log('   ✓ Saved: 05-group-by-status.png');
-
-  // Screenshot 6: Bulk Operations (with selections)
-  console.log('\n📸 Screenshot 6: Bulk Operations...');
-  const popup6 = await context.newPage();
-  await popup6.goto(popupUrl);
-  await wait(2000);
-
-  // Set to large width
-  try {
-    await popup6.click('[aria-label="Set large width"]', { timeout: 5000 });
-    await wait(500);
-  } catch (e) {
-    console.log('   ⚠ Could not set width, continuing...');
-  }
-
-  // Select several tabs
-  try {
-    const checkboxes = await popup6.$$('input[type="checkbox"]');
-    for (let i = 0; i < Math.min(5, checkboxes.length); i++) {
-      await checkboxes[i].check();
-      await wait(100);
-    }
-    await wait(500);
-  } catch (e) {
-    console.log('   ⚠ Could not select tabs, continuing...');
-  }
-
-  // Capture just the extension popup
-  const appElement6 = await popup6.$('.app'); await appElement6.screenshot({
-    path: join(screenshotsPath, '06-bulk-operations.png'),
-    
-  });
-  console.log('   ✓ Saved: 06-bulk-operations.png');
-
-  // Screenshot 7: Light Theme
-  console.log('\n📸 Screenshot 7: Light Theme...');
-  const popup7 = await context.newPage();
-  await popup7.goto(popupUrl);
-  await wait(2000);
-
-  // Set to large width
-  try {
-    await popup7.click('[aria-label="Set large width"]', { timeout: 5000 });
-    await wait(500);
-  } catch (e) {
-    console.log('   ⚠ Could not set width, continuing...');
-  }
-
-  // Toggle to light theme (click theme button twice)
-  try {
-    const themeButton = await popup7.$('button[aria-label*="theme"]');
-    if (themeButton) {
-      await themeButton.click();
-      await wait(300);
-      await themeButton.click();
-      await wait(500);
-    }
-  } catch (e) {
-    console.log('   ⚠ Could not change theme, continuing...');
-  }
-
-  // Capture just the extension popup
-  const appElement7 = await popup7.$('.app'); await appElement7.screenshot({
-    path: join(screenshotsPath, '07-light-theme.png'),
-    
-  });
-  console.log('   ✓ Saved: 07-light-theme.png');
-
-  // Screenshot 8: Column Resizing (NEW for v0.22.0)
-  console.log('\n📸 Screenshot 8: Column Resizing (NEW)...');
-  const popup8 = await context.newPage();
-  await popup8.goto(popupUrl);
-  await wait(2000);
-
-  // Set to large width
-  try {
-    await popup8.click('[aria-label="Set large width"]', { timeout: 5000 });
-    await wait(500);
-  } catch (e) {
-    console.log('   ⚠ Could not set width, continuing...');
-  }
-
-  // Resize some columns to make it obvious
-  try {
-    // Get the Title column header
-    const titleHeader = await popup8.$('th.col-title');
-    if (titleHeader) {
-      const bbox = await titleHeader.boundingBox();
-      // Move to the right edge of the Title column (where the resize handle is)
-      await popup8.mouse.move(bbox.x + bbox.width - 2, bbox.y + bbox.height / 2);
-      await wait(500); // Wait for hover effect to show
-      // Drag to make it wider
-      await popup8.mouse.down();
-      await popup8.mouse.move(bbox.x + bbox.width + 100, bbox.y + bbox.height / 2, { steps: 10 });
-      await wait(300);
-      await popup8.mouse.up();
-      await wait(500);
-    }
-  } catch (e) {
-    console.log('   ⚠ Could not resize column, showing default view...');
-  }
-
-  // Hover over another resize handle to show the indicator
-  try {
-    const timeHeader = await popup8.$('th.col-time');
-    if (timeHeader) {
-      const bbox = await timeHeader.boundingBox();
-      await popup8.mouse.move(bbox.x + bbox.width - 2, bbox.y + bbox.height / 2);
-      await wait(500); // Wait for hover effect to show
-    }
-  } catch (e) {
-    console.log('   ⚠ Could not hover over resize handle, continuing...');
-  }
-
-  // Capture just the extension popup
-  const appElement8 = await popup8.$('.app');
-  await appElement8.screenshot({
-    path: join(screenshotsPath, '08-column-resizing.png'),
-  });
-  console.log('   ✓ Saved: 08-column-resizing.png');
-
-  console.log('\n✅ All screenshots captured successfully!');
-  console.log(`📁 Screenshots saved to: ${screenshotsPath}`);
-  console.log('\n📝 v0.22.0 Screenshots:');
-  console.log('   01 - Main Interface (updated with Reset Columns button)');
-  console.log('   02 - Keyboard Navigation');
-  console.log('   03 - Help Modal with Keyboard Shortcuts');
-  console.log('   04 - Group by Domain');
-  console.log('   05 - Group by Status');
-  console.log('   06 - Bulk Operations');
-  console.log('   07 - Light Theme');
-  console.log('   08 - Column Resizing (NEW - shows resize handles and custom widths)');
-  console.log('\n📝 Next steps:');
-  console.log('   1. Review screenshots in screenshots/ folder');
-  console.log('   2. All should be 1280x800 (Chrome Web Store requirement)');
-  console.log('   3. Upload to Chrome Web Store');
-  console.log('   4. Copy to assets/ folder if needed');
-
-  // Close browser
-  await wait(2000);
-  await context.close();
 }
 
-main().catch(error => {
-  console.error('❌ Error:', error);
+/** Center the popup on a 1280×800 canvas with a soft shadow, as the store expects. */
+async function compose(context, png, path) {
+  const page = await context.newPage();
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.setContent(`
+    <body style="margin:0;width:1280px;height:800px;display:grid;place-items:center;
+      background:linear-gradient(135deg,#0d1b2a 0%,#12343b 100%)">
+      <img src="data:image/png;base64,${png.toString('base64')}"
+        style="border-radius:10px;box-shadow:0 24px 60px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.06)">
+    </body>`);
+  await page.screenshot({ path });
+  await page.close();
+}
+
+main().catch(err => {
+  console.error(err);
   process.exit(1);
 });

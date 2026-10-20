@@ -15,7 +15,8 @@
     "test:e2e": "npm run build && playwright test",
     "screenshots": "npm run build:screenshots && node scripts/capture-screenshots.js",
     "package": "npm run build && node scripts/package.js",
-    "promo": "node scripts/generate-promo.js"
+    "promo": "node scripts/generate-promo.js",
+    "cws": "node scripts/cws.js"
   },
   "dependencies": {
     "preact": "^10.29.8"

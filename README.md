@@ -108,8 +108,13 @@ Everything stays on your device: no servers, accounts, analytics or external req
 | `npm run package` | Build and zip `dist/` into `autopsy-v<version>.zip` for the store |
 | `npm run screenshots` | Build the screenshot variant and capture store screenshots into `screenshots/` |
 | `npm run promo` | Render the promo tile and marquee from `assets/promo-*.html` |
+| `npm run cws -- status` / `submit` | Check the Chrome Web Store item, or upload the packaged zip and submit it for review (see below) |
 
 The end-to-end tests need Playwright's Chromium (`npx playwright install chromium`). They put browser profiles in `~/.xtmp` when it exists, otherwise in the OS temp directory.
+
+### Publishing
+
+`npm run package && npm run cws -- submit` uploads `autopsy-v<version>.zip` and submits it for review through the Chrome Web Store API v2. Add `--dry-run` to only run the checks, or `--staged` to hold the approved version until you publish it in the dashboard. It authenticates by impersonating the `cws-publisher` service account in the `autopsy-publishing` Google Cloud project with `gcloud` (no key file), so you need a current `gcloud auth login` with Token Creator rights on that account. IDs are in `scripts/cws.config.json`. The API only uploads packages; listing text and images are still edited in the dashboard (see `STORE_LISTING.md`).
 
 ### Layout
 

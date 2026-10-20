@@ -1,0 +1,6 @@
+{
+  "extensionId": "mmcbbcemljflnhgkfenmpcidehmaoihk",
+  "publisherId": "<from Developer Dashboard → Publisher → Settings>",
+  "projectId": "autopsy-publishing",
+  "serviceAccount": "cws-publisher@autopsy-publishing.iam.gserviceaccount.com"
+}

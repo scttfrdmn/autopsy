@@ -114,7 +114,7 @@ The end-to-end tests need Playwright's Chromium (`npx playwright install chromiu
 
 ### Publishing
 
-`npm run package && npm run cws -- submit` uploads `autopsy-v<version>.zip` and submits it for review through the Chrome Web Store API v2. Add `--dry-run` to only run the checks, or `--staged` to hold the approved version until you publish it in the dashboard. It authenticates by impersonating the `cws-publisher` service account in the `autopsy-publishing` Google Cloud project with `gcloud` (no key file), so you need a current `gcloud auth login` with Token Creator rights on that account. IDs are in `scripts/cws.config.json`. The API only uploads packages; listing text and images are still edited in the dashboard (see `STORE_LISTING.md`).
+`npm run package && npm run cws -- submit` uploads `autopsy-v<version>.zip` and submits it for review through the Chrome Web Store API v2. Add `--dry-run` to only run the checks, or `--staged` to hold the approved version until you publish it in the dashboard. It authenticates by impersonating the `cws-publisher` service account in the `autopsy-publishing` Google Cloud project with `gcloud` (no key file), so you need a current `gcloud auth login` with Token Creator rights on that account. IDs are in `scripts/cws.config.json`. The full release checklist is in [RELEASING.md](RELEASING.md). The API only uploads packages; listing text and images are still edited in the dashboard (see `STORE_LISTING.md`).
 
 ### Layout
 

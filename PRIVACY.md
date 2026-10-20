@@ -1,77 +1,56 @@
 # Privacy Policy for Autopsy
 
-**Last updated:** 2025-12-22
+**Last updated:** 2026-10-19
 
 ## Overview
 
-Autopsy is committed to protecting your privacy. This extension operates entirely on your local device and does not collect, transmit, or store any personal data outside of your browser.
+Autopsy runs entirely in your browser. It does not collect, transmit or share any data. Nothing leaves your device.
 
 ## Data Collection
 
-**We collect ZERO data.** Autopsy does not:
-- Transmit any data to external servers
-- Use analytics or telemetry services
-- Create user accounts or profiles
-- Sync data to the cloud
-- Share data with third parties
-- Track your browsing history
+**Autopsy collects no data.** It does not:
+- Send data to any server, including the developer's
+- Use analytics, telemetry or crash reporting
+- Load remote code, fonts or other resources
+- Create accounts or sync data to the cloud
+- Share anything with third parties
 
 ## Permissions Explained
 
-Autopsy requires the following Chrome permissions to function:
-
 ### tabs
-**Why:** To read tab information including title, URL, active status, and last accessed time.
-**Data:** Used locally to display in the popup interface. Never transmitted externally.
+**Why:** To list your tabs with their titles, URLs, favicons and Chrome's "last accessed" time, and to switch to, pin, move, close and reopen tabs when you ask it to.
 
 ### tabGroups
-**Why:** To read tab group information (name, color) for display and organization features.
-**Data:** Used locally for grouping functionality.
-
-### processes
-**Why:** To read memory usage information per browser process.
-**Data:** Used locally to show which tabs consume the most memory.
+**Why:** To show which Chrome tab group a tab belongs to.
 
 ### storage
-**Why:** To store tab creation timestamps locally.
-**Data:** Stored in `chrome.storage.local` on your device. Used to track tab age across browser restarts.
+**Why:** To remember when each open tab was opened, so its age survives browser restarts, and to save your preferences.
 
-### webRequest + host_permissions (<all_urls>)
-**Why:** To monitor network activity (request count, bytes transferred, timing) per tab.
-**Data:** Aggregated statistics stored in memory in the background service worker. Not persisted to disk.
+### webRequest and host permissions (`<all_urls>`)
+**Why:** To count, per tab, how many network requests it made, when the last one happened, and how many bytes were received (from the `Content-Length` header). Autopsy observes these events. It does not read request or response bodies, and it never blocks or modifies requests.
 
-## Local Data Storage
+## What Is Stored, and Where
 
-Autopsy stores minimal data locally using Chrome's storage API:
-- Tab creation timestamps
-- Per-instance tab metadata (URL, window, position)
-- User preferences (theme, popup width)
+| Data | Where | Kept until |
+| --- | --- | --- |
+| For each **open** tab: its URL, when it was opened, and its window and position | `chrome.storage.local` | The tab closes. Records are kept for about 10 minutes after a browser restart so restored tabs can reclaim their ages, then discarded. |
+| Preferences (theme, width, column widths, sort, pinned-tab protection) | `chrome.storage.local` | You change them or remove the extension |
+| Per-tab network counters (request count, bytes, timestamps) | `chrome.storage.session` (memory) | The tab closes or the browser restarts |
 
-This data:
-- Stays on your device
-- Is only accessible by Autopsy
-- Can be cleared by removing the extension
-- Is automatically cleaned up (30-day TTL for old tabs)
+Autopsy keeps no browsing history. Earlier versions (0.22 and before) kept a timestamp for every URL ever visited; version 0.23 deletes that data on upgrade.
 
-## Security
+All of this is only accessible to Autopsy and is removed when you uninstall it.
 
-- All code is open source and auditable on GitHub
-- No external network requests are made
-- No credentials or authentication required
-- No cookies or tracking pixels
+## Exports
+
+CSV and JSON exports are created locally and saved only where you choose.
 
 ## Changes to This Policy
 
-We may update this privacy policy from time to time. Changes will be posted on the GitHub repository with an updated "Last updated" date.
+Changes are posted in the GitHub repository with an updated "Last updated" date.
 
 ## Contact
 
-For questions, concerns, or to report issues:
 - **Email:** info@autopsy.tools
 - **GitHub Issues:** https://github.com/scttfrdmn/autopsy/issues
-- **Source Code:** https://github.com/scttfrdmn/autopsy
-
-## Open Source
-
-Autopsy is open source software licensed under the MIT License. You can review the complete source code at:
-https://github.com/scttfrdmn/autopsy
+- **Source Code:** https://github.com/scttfrdmn/autopsy (MIT License)

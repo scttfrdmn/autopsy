@@ -1,51 +1,29 @@
-# Autopsy - Quick Start
+# Autopsy Quick Start
 
-## Get It Running in 3 Steps
+## Install
 
-### 1. Install Dependencies
+From the [Chrome Web Store](https://chromewebstore.google.com/detail/autopsy/mmcbbcemljflnhgkfenmpcidehmaoihk), or from source:
+
 ```bash
-cd autopsy
 npm install
-```
-
-### 2. Build
-```bash
 npm run build
 ```
 
-### 3. Load in Chrome
-1. Open Chrome
-2. Go to `chrome://extensions/`
-3. Turn on "Developer mode" (top right toggle)
-4. Click "Load unpacked"
-5. Select the `dist` folder inside the `autopsy` directory
+Then open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked**, and select `dist/`.
 
-**That's it!** Click the Autopsy icon in your toolbar to analyze your tabs.
+## Use
 
-## What You'll See
+1. Click the Autopsy icon in the toolbar.
+2. Tabs are sorted stalest first. Status shows how long since you last looked at each tab:
+   ● Active · ◆ Recent (under 1h) · ■ Idle (under 1d) · ✕ Stale (over 1d).
+3. Click **Select N stale**, check that the selection looks right, then click **Close N** in the bar at the bottom.
+4. Changed your mind? Click **Undo** in the toast, or press ⌘/Ctrl+Z.
 
-- **Status dots**: 🟢 Active | 🔵 Recent | 🟡 Idle | 🔴 Dead
-- **Sortable columns**: Click any header to sort
-- **Quick actions**: Click row to focus, × to close
-- **Smart stats**: Header shows total tabs, dead tabs, and memory usage
+### Tips
 
-## Tips
-
-- **Dead tabs** (red dot) haven't had network activity in over an hour — safe to close
-- **Memory** column highlights heavy tabs (note: memory is grouped by Chrome process)
-- **Requests** shows total network activity — high count = actively loading content
-- **Click Refresh** to update all metrics
-
-## Development Mode
-
-Want to hack on it?
-
-```bash
-npm run dev
-```
-
-Load the `dist` folder as usual, and Vite will rebuild on save.
-
----
-
-**Note**: Some features require Chrome Dev/Canary for full memory API access. On stable Chrome, memory data may be limited but everything else works perfectly!
+- Click a row to switch to that tab. Hover a row and click × to close just that tab.
+- Use the **Show**, **Age** and **Group** dropdowns to narrow things down. Bulk actions only touch tabs you can see.
+- **Close N duplicates** keeps the copy of each page you viewed most recently.
+- A pulsing dot in the **Network** column marks a background tab that's still making requests.
+- Ages like `≥3d` mean the tab was open before Autopsy started tracking it.
+- Press `?` for every keyboard shortcut. The ⋯ menu has theme, width, export and pinned-tab protection.

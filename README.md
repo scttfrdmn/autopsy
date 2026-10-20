@@ -1,305 +1,144 @@
 # Autopsy
 
-[![Version](https://img.shields.io/badge/version-0.22.0-blue.svg)](https://github.com/scttfrdmn/autopsy/releases)
+[![Version](https://img.shields.io/badge/version-0.23.0-blue.svg)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue.svg)](https://www.typescriptlang.org/)
-[![ESLint](https://img.shields.io/badge/ESLint-passing-brightgreen.svg)](eslint.config.js)
-[![Code Style](https://img.shields.io/badge/code%20style-prettier-ff69b4.svg)](https://prettier.io/)
+[![Chrome](https://img.shields.io/badge/Chrome-121%2B-4285F4.svg)](https://chromewebstore.google.com/detail/autopsy/mmcbbcemljflnhgkfenmpcidehmaoihk)
 
-> **Postmortem analysis for your tabs** — Find what to close
+> **Postmortem analysis for your tabs.** Find what to close.
 
-A lightweight Chrome extension that helps you identify which tabs to close through real-time activity tracking, smart status indicators, and comprehensive tab analysis.
+Autopsy is a small Chrome extension that shows, for every open tab, how long it has been open, when you last looked at it, and whether it's still busy on the network. Then it helps you close the ones you don't need, with undo.
 
----
+![Main interface](screenshots/01-main-interface.png)
 
-## 🔍 Smart Analysis
+## What it shows
 
-**Real-time network activity tracking**
-Monitor requests, bytes transferred, and timing for each tab
+| Column | Meaning |
+| --- | --- |
+| **Status** | How stale the tab is, from when you last viewed it: ● **Active** (showing in its window, or viewed under 10 minutes ago) · ◆ **Recent** (under 1 hour) · ■ **Idle** (under 1 day) · ✕ **Stale** (over 1 day). |
+| **Age** | How long the tab has been open. See [How tab age works](#how-tab-age-works). |
+| **Viewed** | When you last switched to the tab, from Chrome's own `lastAccessed`, which survives restarts. |
+| **Network** | When the tab last made a network request. A pulsing dot marks background tabs that are still **busy**. |
+| **Data** | Bytes received and requests made since Chrome started. Counts only responses that report a size and weren't served from cache. |
 
-**Intelligent status indicators**
-- **●** Active — Network activity in last 10 seconds
-- **◆** Recent — Active in last 5 minutes
-- **■** Idle — Active in last hour
-- **✕** Dead — No activity for over an hour
+Badges mark **Pinned**, **Audio**, **Asleep** (unloaded by Chrome) and Chrome tab groups.
 
-**Per-instance age tracking**
-Accurate tab ages that persist across browser restarts
+## What it does
 
-**Memory usage insights**
-Identify resource-heavy tabs and processes
+- **Search, filter and group.**
+  - Search by title or URL.
+  - Show *all*, *stale only*, *idle or stale*, or *busy in background* tabs.
+  - Filter by minimum age.
+  - Group by site, window or status, with collapsible groups.
+- **Close what you don't need.**
+  - One click to *Select N stale* or *Close N duplicates*. Duplicates keep the copy you viewed most recently.
+  - Close any row with its × button.
+  - **Every close can be undone** (⌘/Ctrl+Z or the toast). Undo reopens tabs in their original window and position.
+- **Bulk actions** on selected tabs: pin, unpin, move to a new window, close.
+  - Bulk actions only apply to tabs you can see; hidden rows drop out of the selection.
+  - Pinned tabs are never bulk-closed unless you turn that off.
+- **Export** the visible tabs to CSV or JSON.
+- **Settings** (⋯ menu): theme (auto/light/dark), popup width (S/M/L), pinned-tab protection, column-width reset. Columns can be resized by dragging their borders.
 
----
+### Keyboard
 
-## 🎯 Bulk Operations
+| Keys | Action |
+| --- | --- |
+| `↑` `↓` / `j` `k`, `Home` `End` | Move between tabs |
+| `Space` | Select or deselect the focused tab |
+| `Enter` | Switch to the focused tab |
+| `Delete` / `Backspace` | Close selected tabs (or the focused tab) |
+| `⌘/Ctrl+A` | Select all visible tabs |
+| `⌘/Ctrl+Z` | Undo the last close |
+| `/` or `⌘/Ctrl+F` | Search (`↓` from search jumps to the list) |
+| `Esc` | Close a dialog, then clear focus, search, selection |
+| `?` | Help |
 
-- **Close duplicates** — Remove duplicate URLs, automatically keeps newest
-- **Bulk pin/unpin** — Manage multiple tabs at once
-- **Select by domain** — Quick domain-wide selection with one click
-- **Move to new window** — Organize selected tabs across windows
+## How tab age works
 
----
+Chrome doesn't give extensions a tab's creation time. The tabs API only exposes `lastAccessed`, the last time a tab became active, so Autopsy keeps its own record:
 
-## 📊 Advanced Grouping
+- When a tab opens, the service worker records the time. Navigating, including in-page navigation in single-page apps, never resets it.
+- On a browser restart, tab and window IDs all change. For about 10 minutes after startup, restored tabs are matched to the previous session's records by URL, then by window and tab position, and keep their original open time.
+- Tabs that existed before Autopsy was installed have no known open time. They show a minimum, such as `≥3d`, based on when Autopsy first saw them or when you last viewed them, whichever is earlier.
 
-- **Group by domain** — Organize tabs by website
-- **Group by window** — See tabs per browser window
-- **Group by status** — View by activity level (active, recent, idle, dead)
-- **Collapsible groups** — Clean, organized view
+Network stats are kept in `chrome.storage.session`. They survive Chrome stopping the idle service worker, and reset when the browser restarts.
 
----
-
-## ⌨️ Keyboard Navigation
-
-**Full keyboard support for power users**
-- **Arrow Up/Down** — Navigate between tab rows
-- **Space** — Toggle selection on focused row
-- **Enter** — Activate/switch to focused tab
-- **Escape** — Clear focus, then search, then selection
-- **Cmd/Ctrl+F** — Focus search input
-- **Cmd/Ctrl+A** — Select all visible tabs
-- **Delete/Backspace** — Close selected tabs
-- **?** — Open help modal with all shortcuts
-
-**Accessible design**
-- Focus indicators meet WCAG 2.1 AA standards
-- Works seamlessly in flat and grouped views
-- No keyboard traps, fully navigable
-
----
-
-## 📁 Data Export
-
-- **CSV export** — Export to spreadsheet for analysis
-- **JSON export** — Programmatic processing and backup
-- **Full metrics included** — Age, status, network stats, groups
-
----
-
-## 🎨 Customization
-
-- **Dark/Light themes** — Respects system preference or manual override
-- **Responsive width** — Small (600px), Medium (800px), Large (1000px)
-- **Resizable columns** — Drag column borders to adjust widths, persists across sessions
-- **Accessible design** — WCAG AA compliant with shape variants
-
----
-
-## ⚡ Lightweight Design
-
-- Built with **Preact** (3KB vs React's 40KB)
-- Efficient background service worker
-- Total extension size: **<50KB**
-- **Minimal resource footprint** — doesn't contribute to the problem!
-
----
-
-## 📸 Screenshots
+## Screenshots
 
 <details>
-<summary>Click to view screenshots</summary>
+<summary>More screenshots</summary>
 
-### Main Interface
-![Main Interface](screenshots/01-main-interface.png)
-*Real-time status tracking with smart indicators and comprehensive metrics*
-
-### Keyboard Navigation
-![Keyboard Navigation](screenshots/02-keyboard-navigation.png)
-*Navigate with arrow keys, select with Space, activate with Enter*
-
-### Keyboard Shortcuts Help
-![Help Modal](screenshots/03-help-keyboard-shortcuts.png)
-*Built-in help modal with all keyboard shortcuts*
-
-### Domain Grouping
-![Group by Domain](screenshots/04-group-by-domain.png)
-*Organize tabs by website with collapsible groups*
-
-### Status Grouping
-![Group by Status](screenshots/05-group-by-status.png)
-*Group by activity level (Active, Recent, Idle, Inactive)*
-
-### Bulk Operations
-![Bulk Operations](screenshots/06-bulk-operations.png)
-*Select multiple tabs and perform actions in bulk*
-
-### Light Theme
-![Light Theme](screenshots/07-light-theme.png)
-*WCAG AA compliant light theme with improved contrast*
-
-### Column Resizing
-![Column Resizing](screenshots/08-column-resizing.png)
-*Drag column borders to adjust widths with hover indicators and persistent sizing*
+| | |
+| --- | --- |
+| ![Keyboard navigation](screenshots/02-keyboard-navigation.png) | ![Help](screenshots/03-help-keyboard-shortcuts.png) |
+| ![Group by site](screenshots/04-group-by-domain.png) | ![Group by status](screenshots/05-group-by-status.png) |
+| ![Bulk selection](screenshots/06-bulk-operations.png) | ![Light theme](screenshots/07-light-theme.png) |
+| ![Settings menu](screenshots/08-settings-menu.png) | |
 
 </details>
 
----
+## Install
 
-## 🚀 Installation
+**[Chrome Web Store →](https://chromewebstore.google.com/detail/autopsy/mmcbbcemljflnhgkfenmpcidehmaoihk)** (Chrome 121 or later)
 
-### Chrome Web Store
-**[Install from Chrome Web Store →](https://chromewebstore.google.com/detail/autopsy/mmcbbcemljflnhgkfenmpcidehmaoihk)**
-
-*v0.22.0 adds resizable columns with drag handles between column headers.*
-
-### Development Mode
-
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/scttfrdmn/autopsy.git
-   cd autopsy
-   ```
-
-2. **Install dependencies:**
-   ```bash
-   npm install
-   ```
-
-3. **Build the extension:**
-   ```bash
-   npm run build
-   ```
-
-4. **Load in Chrome:**
-   - Open Chrome and navigate to `chrome://extensions/`
-   - Enable "Developer mode" (toggle in top right)
-   - Click "Load unpacked"
-   - Select the `dist` folder from this project
-
-### Development with Hot Reload
+### From source
 
 ```bash
-npm run dev
+git clone https://github.com/scttfrdmn/autopsy.git
+cd autopsy
+npm install
+npm run build
 ```
 
-Then load the `dist` folder as an unpacked extension. Vite will rebuild on changes.
+Then open `chrome://extensions`, enable **Developer mode**, click **Load unpacked**, and choose `dist/`. During development, `npm run dev` rebuilds `dist/` on every change; reload the extension to pick it up.
 
----
+## Privacy
 
-## 💻 Usage
+Everything stays on your device: no servers, accounts, analytics or external requests. Autopsy stores tab open times and your preferences in `chrome.storage.local`, and network counters in `chrome.storage.session`. See [PRIVACY.md](PRIVACY.md).
 
-1. Click the **Autopsy** icon in your Chrome toolbar
-2. View your tabs with real-time status indicators
-3. Click **column headers** to sort (Age, Status, Memory, etc.)
-4. **Drag column borders** to resize columns (Title, Age, Activity, Requests, Data)
-5. Click a **row** to focus that tab
-6. Click the **×** button to close a tab
-7. Use **bulk operations** to manage multiple tabs at once
-8. **Group tabs** by domain, window, or status
-9. **Export data** to CSV or JSON for analysis
+## Development
 
----
+| Command | What it does |
+| --- | --- |
+| `npm run build` | Type-check and build to `dist/` |
+| `npm run dev` | Rebuild `dist/` on change |
+| `npm test` | Unit tests (Vitest) |
+| `npm run test:e2e` | Build, then end-to-end tests in Chromium with the extension loaded (Playwright) |
+| `npm run lint` / `npm run format` | ESLint / Prettier |
+| `npm run package` | Build and zip `dist/` into `autopsy-v<version>.zip` for the store |
+| `npm run screenshots` | Build the screenshot variant and capture store screenshots into `screenshots/` |
+| `npm run promo` | Render the promo tile and marquee from `assets/promo-*.html` |
 
-## 🏗️ Architecture
+The end-to-end tests need Playwright's Chromium (`npx playwright install chromium`). They put browser profiles in `~/.xtmp` when it exists, otherwise in the OS temp directory.
 
-### Background Service Worker (`src/background/worker.ts`)
-- Tracks tab creation times with per-instance fingerprinting
-- Monitors network requests (count, timing, bytes)
-- Lightweight in-memory storage
-- Automatic cleanup when tabs close
-
-### Popup UI (`src/popup.tsx`)
-- Preact-based interface (minimal bundle size)
-- Aggregates data from Chrome APIs and background worker
-- Smart sorting and filtering
-- Professional, accessible design
-
-### Type Safety
-Full TypeScript support with strict mode and Chrome extension types.
-
----
-
-## 🔒 Privacy & Security
-
-**All data stays local on your device.**
-
-- ✅ No cloud sync
-- ✅ No tracking or telemetry
-- ✅ No external servers
-- ✅ Open source and auditable
-
-**Data stored locally:**
-- Tab creation timestamps
-- Per-instance tab metadata
-- User preferences (theme, width)
-- Network activity statistics (in memory)
-
-**See our [Privacy Policy](PRIVACY.md) for details.**
-
----
-
-## 🛠️ Development
-
-### Tech Stack
-- **TypeScript 5.3** — Type-safe development
-- **Preact** — Lightweight React alternative
-- **Vite** — Fast build tooling
-- **Chrome Extension Manifest V3** — Modern extension platform
-- **ESLint + Prettier** — Code quality and formatting
-
-### Scripts
-
-```bash
-npm run dev       # Development mode with hot reload
-npm run build     # Production build
-npm run lint      # Run ESLint
-npm run lint:fix  # Fix ESLint issues
-npm run format    # Format code with Prettier
-```
-
-### Project Structure
+### Layout
 
 ```
-autopsy/
-├── src/
-│   ├── background/
-│   │   └── worker.ts          # Service worker
-│   ├── popup.tsx              # Main UI component
-│   ├── popup.css              # Styles
-│   └── types/
-│       └── index.ts           # TypeScript definitions
-├── public/
-│   ├── manifest.json          # Extension manifest
-│   └── icon*.png              # Extension icons
-├── dist/                      # Build output
-└── package.json
+src/
+├── background/worker.ts     # Service worker: tab records, network stats, snapshot messages
+├── lib/                     # Pure logic, unit-tested
+│   ├── tabRecords.ts        #   Open-time tracking and restart matching
+│   ├── status.ts            #   Staleness, busy, age
+│   ├── view.ts              #   Filter, sort, group, duplicates
+│   ├── export.ts format.ts url.ts constants.ts
+├── popup/
+│   ├── App.tsx              # State, actions, keyboard
+│   ├── actions.ts           # Chrome tab operations (close/restore/pin/move)
+│   ├── hooks/               # useTabs, usePreferences, useTheme, useNow
+│   ├── components/          # Toolbar/Controls/Footer, TabTable, TabRow, Menu, Dialogs
+│   └── popup.css
+└── types/index.ts
+tests/
+├── unit/                    # Vitest
+└── e2e/                     # Playwright (keyboard, undo, pinned protection, restart)
 ```
 
----
+## Contributing
 
-## 🤝 Contributing
+Issues and pull requests are welcome. Please run `npm run lint`, `npm test` and `npm run test:e2e` before opening a PR. See [ROADMAP.md](ROADMAP.md) for what's planned.
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+## License
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+MIT. See [LICENSE](LICENSE).
 
----
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 📧 Contact
-
-**Support:** info@autopsy.tools
-**Issues:** [GitHub Issues](https://github.com/scttfrdmn/autopsy/issues)
-**Source:** [GitHub Repository](https://github.com/scttfrdmn/autopsy)
-
----
-
-## 🙏 Acknowledgments
-
-- Built with [Preact](https://preactjs.com/)
-- Bundled with [Vite](https://vitejs.dev/)
-- Icons designed with surgical/medical inspection theme
-- Inspired by the need for better tab management
-
----
-
-**Don't let tab hoarding slow you down. Perform the autopsy.** 🔬
+**Support:** info@autopsy.tools · **Issues:** [GitHub](https://github.com/scttfrdmn/autopsy/issues) · **Website:** [autopsy.tools](https://autopsy.tools)

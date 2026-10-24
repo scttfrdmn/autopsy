@@ -1,6 +1,6 @@
 # Autopsy
 
-[![Version](https://img.shields.io/badge/version-0.23.0-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.23.1-blue.svg)](CHANGELOG.md)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Chrome](https://img.shields.io/badge/Chrome-121%2B-4285F4.svg)](https://chromewebstore.google.com/detail/autopsy/fmlkjcobafbejgpkjkcgbhfgnlpdkegn)
 

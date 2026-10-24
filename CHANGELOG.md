@@ -2,7 +2,7 @@
 
 All notable changes to Autopsy. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.23.1] - 2026-10-23
 
 ### Fixed
 - Two colour pairs below WCAG AA: accent links in the light theme (4.3:1, now 5.0:1) and the red Close button in the dark theme (4.4:1, now 5.0:1).
@@ -126,6 +126,7 @@ A rework of how Autopsy measures tabs, a redesigned popup, and a sweep of bug fi
 ### Added
 - Initial beta: tab list with status, age filter and bulk close.
 
+[0.23.1]: https://github.com/scttfrdmn/autopsy/releases/tag/v0.23.1
 [0.23.0]: https://github.com/scttfrdmn/autopsy/releases/tag/v0.23.0
 [0.22.0]: https://github.com/scttfrdmn/autopsy/releases/tag/v0.22.0
 [0.21.1]: https://github.com/scttfrdmn/autopsy/releases/tag/v0.21.1

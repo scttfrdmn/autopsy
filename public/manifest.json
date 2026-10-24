@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Autopsy",
-  "version": "0.23.0",
+  "version": "0.23.1",
   "description": "Postmortem analysis for your tabs. See how old and how stale every tab is, then close what you don't need.",
   "minimum_chrome_version": "121",
   "permissions": ["tabs", "tabGroups", "storage", "webRequest"],

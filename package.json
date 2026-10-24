@@ -1,6 +1,6 @@
 {
   "name": "autopsy",
-  "version": "0.23.0",
+  "version": "0.23.1",
   "private": true,
   "description": "Postmortem analysis for your tabs - find what to close",
   "type": "module",

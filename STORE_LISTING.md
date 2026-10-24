@@ -1,6 +1,6 @@
-# Chrome Web Store listing: v0.23.0
+# Chrome Web Store listing
 
-This is the text to paste into the developer dashboard. Images are in `screenshots/` (1280×800) and `assets/` (promo tile 440×280, marquee 1400×560). The package is built by `npm run package` → `autopsy-v0.23.0.zip`.
+This is the text to paste into the developer dashboard. Images are in `screenshots/` (1280×800) and `assets/` (promo tile 440×280, marquee 1400×560). The package is built by `npm run package` → `autopsy-v<version>.zip` and submitted with `npm run cws -- submit` (see RELEASING.md). The text below was last updated for 0.23.
 
 ## Item details
 
